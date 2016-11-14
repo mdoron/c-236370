@@ -1,4 +1,4 @@
 # c-236370
-## 	Authors: 
+## Authors
 Raviv Rachmiel - raviv.rachmiel@gmail.com
 Doron Meshulam - mdoron@campus.technion.ac.il
