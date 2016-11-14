@@ -1,6 +1,7 @@
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
+//Rav was here
 public class Ex1 {
 	private static void printUsage(){
 		System.out.println("<Initial pattern filename> <#horizonal splits> "+
