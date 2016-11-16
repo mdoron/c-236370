@@ -6,6 +6,7 @@ public class ParallelGameOfLife implements GameOfLife {
 	public boolean[][][] invoke(boolean[][] initalField, int hSplit, int vSplit,
 			int generations) {
 		boolean[][][] x=new boolean[2][][];
+		//TODO: improve this to be only one
 		x[0] = get_gen(initalField,hSplit,vSplit, generations-1);
 		x[1] = get_gen(x[0],hSplit,vSplit, 1);
 		return x;
@@ -23,34 +24,15 @@ public class ParallelGameOfLife implements GameOfLife {
 			}
 		}
 
+		/*
+		for each block we initiate a producer (maybe not needed) ,consumer , the block and we add it to the queues of neighs
+		 */
 		for(int row=0;row<hSplit;row++) {
 			for(int col = 0;col < vSplit;col++) {
 				new LifeConsumer().start();
 			}
 		}
-
-		boolean[][] result=new boolean[initalField.length][];
-
-		for (int g=0;g<generations;g++){
-			for (int i=0;i<initalField.length;i++){
-				if (result[i]==null){
-					// using first time -> copy the array
-					result[i]=new boolean[initalField[i].length];
-				}
-
-				for (int j=0;j<initalField[i].length;j++){
-					int numNeighbors=numNeighbors(i,j,input);
-					result[i][j]=false;
-					if (numNeighbors==3 || (input[i][j]&& numNeighbors==2)){
-						result[i][j]=true;
-					}
-				}
-			}
-			boolean[][] tmp;
-			tmp=input;
-			input=result;
-			result=tmp;
-		}
+		//then we need to combine the blocks to a matrix and return it
 		return input;
 	}
 
