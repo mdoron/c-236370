@@ -1,7 +1,7 @@
 public class Queue {
 	Work myWork = null;
 
-	public synchronized Work getNext() {
+	public synchronized Work getNext() throws InterruptedException {
 		while (myWork == null) {
 			wait();
 		}
@@ -11,7 +11,7 @@ public class Queue {
 		return tmp;
 	}
 
-	public synchronized void enqueue(Work w) {
+	public synchronized void enqueue(Work w) throws InterruptedException {
 		while (myWork != null) {
 			wait();
 		}
