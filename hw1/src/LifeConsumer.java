@@ -8,14 +8,14 @@ each consumer holds a queue which has
 gets the queue of blocks array and the block, the num of generations
  */
 public class LifeConsumer extends Thread {
-    Queue<boolean[][]> NeighboursQeueArray[];
+    Queue<boolean[][]> NeighboursQueueArray[];
     boolean[][] block;    //same with producer
     int generations;
     boolean[][] nextBlock;
     boolean[][] sendToProd;
 
     public LifeConsumer(Queue<boolean[][]> nqa[], boolean[][] block, int generations) {
-        NeighboursQeueArray = nqa;
+        NeighboursQueueArray = nqa;
         this.block = block;
         this.generations = generations;
         this.sendToProd = sendToProd;
