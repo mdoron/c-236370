@@ -34,6 +34,7 @@ public class LifeConsumer extends Thread {
 
         nextBlock = new boolean[block.length][];
         genNow = 1;
+        //TODO: check when debugging that genNowe has the right values
         for (genNow = 1; genNow <= generations; genNow++) {
             for (int i = 0; i < block.length; i++) {
                 if (nextBlock[i]==null){
@@ -75,22 +76,52 @@ public class LifeConsumer extends Thread {
         if(genNow > w.getGen()) {
             wait();
         }
+        int counter = 0;
         //assuming all is fine till here, now we take the neighs from block
         switch(d) {
             case UPLEFT:
-                return w.getBlock()[w.getBlock().length][w.getBlock()[0].length]? 1:0;
+                return w.getBlock()[w.getBlock().length-1][w.getBlock()[0].length-1]? 1:0;
 
             case UPRIGHT:
-                return w.getBlock()[w.getBlock().length][0]? 1:0;
+                return w.getBlock()[w.getBlock().length-1][0]? 1:0;
             case DOWNLEFT:
-                return w.getBlock()[0][w.getBlock()[0].length]? 1:0;
+                return w.getBlock()[0][w.getBlock()[0].length-1]? 1:0;
             case DOWNRIGHT:
                 return w.getBlock()[0][0]? 1:0;
-            //TODO: UP RIGHT LEFT DOWN
+            case UP:
+                for(int col = 0; col < w.getBlock()[w.getBlock().length-1].length;col++) {
+                    if(col >= j-1 && col <= j+1) {
+                        counter+= w.getBlock()[w.getBlock().length-1][col]? 1 : 0;
+                    }
+                }
+                return counter;
+            case DOWN:
+                for(int col = 0; col < w.getBlock()[0].length;col++) {
+                    if(col >= j-1 && col <= j+1) {
+                        counter+= w.getBlock()[0][col]? 1 : 0;
+                    }
+                }
+                return counter;
+            case LEFT:
+                for(int row = 0; row < w.getBlock().length;row++) {
+                    if(row >= i-1 && row <= i+1) {
+                        counter+= w.getBlock()[row][w.getBlock()[row].length]? 1 : 0;
+                    }
+                }
+                return counter;
+            case RIGHT:
+                for(int row = 0; row < w.getBlock().length;row++) {
+                    if(row >= i-1 && row <= i+1) {
+                        counter+= w.getBlock()[row][0]? 1 : 0;
+                    }
+                }
+                return counter;
+
             default:
                 return 0;
         }
     }
+
 
     private int numNeighbors(int x, int y, boolean[][] field) {
         int counter = (field[x][y] ? -1 : 0);
