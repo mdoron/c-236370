@@ -1,4 +1,5 @@
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by raviv on 16/11/2016.
@@ -8,17 +9,17 @@ each consumer holds a queue which has
 gets the queue of blocks array and the block, the num of generations
  */
 public class LifeConsumer extends Thread {
-    Queue<boolean[][]> NeighboursQueueArray[];
+    ConcurrentLinkedQueue<Work> NeighboursQueueArray[];
+    ConcurrentLinkedQueue<Work> blockHistory;
     boolean[][] block;    //same with producer
     int generations;
     boolean[][] nextBlock;
-    boolean[][] sendToProd;
 
-    public LifeConsumer(Queue<boolean[][]> nqa[], boolean[][] block, int generations) {
+    public LifeConsumer(ConcurrentLinkedQueue<Work> nqa[], ConcurrentLinkedQueue<Work> blockHistory, int generations) {
         NeighboursQueueArray = nqa;
-        this.block = block;
+        this.blockHistory = blockHistory;
         this.generations = generations;
-        this.sendToProd = sendToProd;
+        this.block = blockHistory.element().getBlock();
     }
 
 
@@ -39,13 +40,11 @@ public class LifeConsumer extends Thread {
                     }
                 }
             }
-            synchronized (sendToProd) {
-                sendToProd = nextBlock;
-            }
             boolean[][] tmp;
             tmp = block;
             block = nextBlock;
-            notify();       //notify producer
+            blockHistory.add(new Work(block,g+1));
+            notifyAll();       //notify producer maybe we should do notify instead
             nextBlock = tmp;
         }
     }
