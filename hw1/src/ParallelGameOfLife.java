@@ -1,16 +1,10 @@
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import javafx.scene.control.cell.ComboBoxListCell;
 
 public class ParallelGameOfLife implements GameOfLife {
 
 	ArrayList<ConcurrentLinkedQueue<Work>> queuesArray;
 
-	/*
-	 * this should run the simulation game in parallell mode
-	 */
 	public boolean[][][] invoke(boolean[][] initalField, int hSplit, int vSplit, int generations) {
 		boolean[][][] x = new boolean[2][][];
 		// TODO: improve this to be only one
@@ -58,15 +52,8 @@ public class ParallelGameOfLife implements GameOfLife {
 				// Initialize array of 8 queues which this block is dependent on their information
 				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>(); 
 				
-				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row, col + 1)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
-
+				setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
+				
 				// Initialize MY queue
 				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
 				boolean[][] block = extractBlock(input, row*hSplit, col*vSplit, rowCellNumber, colCellNumber);
@@ -85,6 +72,68 @@ public class ParallelGameOfLife implements GameOfLife {
 		}
 		
 		return input;
+	}
+
+	private void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray2, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
+			int row, int col, int hSplit, final int vSplit) {
+
+		
+		if(row == 0) {
+			nqa.add(0, null);
+			nqa.add(1, null);
+			nqa.add(2, null);
+			if(col == 0) {
+				nqa.add(3, null);
+				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
+				nqa.add(5, null);
+				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
+				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
+			} else if(col == vSplit) {
+				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
+				nqa.add(4, null);
+				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
+				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
+				nqa.add(7, null);				
+			} else {
+				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
+				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
+				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
+				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
+				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
+			}
+		} else if (row == hSplit) {
+			nqa.add(5, null);
+			nqa.add(6, null);
+			nqa.add(7, null);
+			if(col == 0){ 
+				nqa.add(0, null);
+				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
+				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
+				nqa.add(3, null);
+				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
+			} else if(col == vSplit) {
+				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col)));
+				nqa.add(null);
+				nqa.add(queuesArray.get(calcIndex(vSplit, row, col - 1)));
+				nqa.add(null);
+			} else {
+				nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
+				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
+				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
+				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
+				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
+			}
+		} else {
+			nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
+			nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
+			nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
+			nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
+			nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
+			nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
+			nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
+			nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
+		}
 	}
 
 	private int calcIndex(int vSplit, int row, int col) {
@@ -108,21 +157,4 @@ public class ParallelGameOfLife implements GameOfLife {
 			}
 		}
 	}
-	
-	private int numNeighbors(int x, int y, boolean[][] field) {
-		int counter = (field[x][y] ? -1 : 0);
-		for (int i = x - 1; i <= x + 1; i++) {
-			if ((i < 0) || (i >= field.length)) {
-				continue;
-			}
-			for (int j = y - 1; j <= y + 1; j++) {
-				if (j < 0 || j >= field[0].length) {
-					continue;
-				}
-				counter += (field[i][j] ? 1 : 0);
-			}
-		}
-		return counter;
-	}
-
 }
