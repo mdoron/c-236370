@@ -19,29 +19,6 @@ public class ParallelGameOfLife implements GameOfLife {
 		return x;
 	}
 
-	private boolean[][] extractBlock(boolean[][] initialField, int x, int y, int lx, int ly) {
-		boolean[][] $ = new boolean[lx][ly];
-		for (int i = 0; i < lx; i++) {
-			for (int j = 0; j < ly; j++) {
-				$[i][j] = initialField[x + i][y + j];
-			}
-		}
-		return $;
-	}
-
-	// private boolean[][][] splitFieldToBlocks(boolean[][] initialField, int
-	// hSplit, int vSplit) {
-	// int height = initialField.length/hSplit;
-	// int length = initialField[0].length/vSplit;
-	// boolean[][][] $ = new boolean[hSplit*vSplit][][];
-	// for (int i=0; i<initialField.length; i++) {
-	// for (int j=0; j<initialField[0].length; j++) {
-	// $[][i % height][j % length] = ;
-	// }
-	// }
-	// return $;
-	// }
-
 	public boolean[][] get_gen(boolean[][] initialField, int hSplit, int vSplit, int generations) {
 
 		// Retrieve field dimensions 
@@ -99,14 +76,39 @@ public class ParallelGameOfLife implements GameOfLife {
 				new LifeConsumer(nqa, blocks, generations, row, col).start();
 			}
 		}
-		// then we need to combine the blocks to a matrix and return it
+		// Combine all information into input. 
+		// TODO: @ravivos, in the last generation we still push our current state to our queue
+		for (int row; row<hSplit; row++) {
+			for(int col; col<vSplit; col++) {
+				setBlock(input, queuesArray.get(calcIndex(vSplit, row, col)).poll().getBlock(), row*hSplit, col*vSplit);
+			}
+		}
+		
 		return input;
 	}
 
 	private int calcIndex(int vSplit, int row, int col) {
 		return col % vSplit + row * vSplit;
 	}
+	
+	private boolean[][] extractBlock(boolean[][] initialField, int x, int y, int lx, int ly) {
+		boolean[][] $ = new boolean[lx][ly];
+		for (int i = 0; i < lx; i++) {
+			for (int j = 0; j < ly; j++) {
+				$[i][j] = initialField[x + i][y + j];
+			}
+		}
+		return $;
+	}
 
+	private void setBlock(boolean[][] board, boolean[][] block, int x, int y) {
+		for(int i=0; i<block.length; i++){
+			for (int j=0; j<block[0].length; j++){
+				board[x+i][y+j] = block[i][j];
+			}
+		}
+	}
+	
 	private int numNeighbors(int x, int y, boolean[][] field) {
 		int counter = (field[x][y] ? -1 : 0);
 		for (int i = x - 1; i <= x + 1; i++) {
