@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -9,17 +10,21 @@ each consumer holds a queue which has
 gets the queue of blocks array and the block, the num of generations
  */
 public class LifeConsumer extends Thread {
-    ConcurrentLinkedQueue<Work> NeighboursQueueArray[];
+    ArrayList<ConcurrentLinkedQueue<Work>> NeighboursQueueArray;
     ConcurrentLinkedQueue<Work> blockHistory;
     boolean[][] block;    //same with producer
     int generations;
     boolean[][] nextBlock;
+    int r;
+    int c;
 
-    public LifeConsumer(ConcurrentLinkedQueue<Work> nqa[], ConcurrentLinkedQueue<Work> blockHistory, int generations) {
+    public LifeConsumer(ArrayList<ConcurrentLinkedQueue<Work>> nqa, ConcurrentLinkedQueue<Work> blockHistory, int generations,int row,int col) {
         NeighboursQueueArray = nqa;
         this.blockHistory = blockHistory;
         this.generations = generations;
         this.block = blockHistory.element().getBlock();
+        this.r = row;
+        this.c = col;
     }
 
 

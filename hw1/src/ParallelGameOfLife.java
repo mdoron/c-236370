@@ -78,8 +78,8 @@ public class ParallelGameOfLife implements GameOfLife {
 		}
 		// Combine all information into input. 
 		// TODO: @ravivos, in the last generation we still push our current state to our queue
-		for (int row; row<hSplit; row++) {
-			for(int col; col<vSplit; col++) {
+		for (int row = 0; row<hSplit; row++) {
+			for(int col = 0; col<vSplit; col++) {
 				setBlock(input, queuesArray.get(calcIndex(vSplit, row, col)).poll().getBlock(), row*hSplit, col*vSplit);
 			}
 		}
