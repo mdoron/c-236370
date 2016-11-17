@@ -80,7 +80,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		return input;
 	}
 
-	private void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray2, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
+	private void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
 			int row, int col, int hSplit, final int vSplit) {
 
 		if (row == 0) {
