@@ -65,34 +65,34 @@ public class ParallelGameOfLife implements GameOfLife {
 		}
 		
 		// Dividing into sub-tasks. Each thread gets a block and runs it
-		for (int row = 0; row < vSplit; row++) {
-			for (int col = 0; col < hSplit; col++) {
+		for (int row = 0; row < hSplit; row++) {
+			for (int col = 0; col < vSplit; col++) {
 				// Calculate size of cells in inside block
-				int rowCellNumber = (int) Math.floorDiv(height, vSplit);
-				int colCellNumber = (int) Math.floorDiv(length, hSplit);
+				int rowCellNumber = (int) Math.floorDiv(height, hSplit);
+				int colCellNumber = (int) Math.floorDiv(length, vSplit);
 				// If the block is in the last row or column, it might not be in the same size of the of the previous blocks because modulo != 0
-				if (row == vSplit) {
-					Math.ceil(((double)height)/vSplit);
+				if (row == hSplit) {
+					Math.ceil(((double)height)/hSplit);
 				}
-				if (col == hSplit && colCellNumber != ((double)length)/hSplit) {
-					Math.ceil(((double)length)/hSplit);
+				if (col == vSplit) {
+					Math.ceil(((double)length)/vSplit);
 				}
 				
 				// Initialize array of 8 queues which this block is dependent on their information
 				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>(); 
 				
-				nqa.add(queuesArray.get(calcIndex(hSplit, row - 1, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row - 1, col)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row - 1, col + 1)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row, col + 1)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row + 1, col - 1)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row + 1, col)));
-				nqa.add(queuesArray.get(calcIndex(hSplit, row + 1, col + 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row, col - 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row, col + 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col)));
+				nqa.add(queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
 
 				// Initialize MY queue
-				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(hSplit, row, col));
-				boolean[][] block = extractBlock(input, row, col, rowCellNumber, colCellNumber);
+				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
+				boolean[][] block = extractBlock(input, row*hSplit, col*vSplit, rowCellNumber, colCellNumber);
 				blocks.add(new Work(block, 0));
 				
 				//Start thread
@@ -103,8 +103,8 @@ public class ParallelGameOfLife implements GameOfLife {
 		return input;
 	}
 
-	private int calcIndex(int hSplit, int row, int col) {
-		return col % hSplit + row * hSplit;
+	private int calcIndex(int vSplit, int row, int col) {
+		return col % vSplit + row * vSplit;
 	}
 
 	private int numNeighbors(int x, int y, boolean[][] field) {
