@@ -96,7 +96,7 @@ public class ParallelGameOfLife implements GameOfLife {
 				blocks.add(new Work(block, 0));
 				
 				//Start thread
-				new LifeConsumer(nqa, blocks, generations).start();
+				new LifeConsumer(nqa, blocks, generations, row, col).start();
 			}
 		}
 		// then we need to combine the blocks to a matrix and return it
