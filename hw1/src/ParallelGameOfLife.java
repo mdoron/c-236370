@@ -33,7 +33,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		// writes its new state into it 8 times, and other blocks read from it
 		queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit * vSplit);
 		for (int i = 0; i < hSplit * vSplit; i++) {
-			queuesArray.set(i, new ConcurrentLinkedQueue<Work>());
+			queuesArray.add(i, new ConcurrentLinkedQueue<Work>());
 		}
 
 		// Dividing into sub-tasks. Each thread gets a block and runs it
