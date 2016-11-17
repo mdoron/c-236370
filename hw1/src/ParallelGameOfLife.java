@@ -1,9 +1,12 @@
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javafx.scene.control.cell.ComboBoxListCell;
+
 public class ParallelGameOfLife implements GameOfLife {
 
-	boolean[][][] blocksArray;
+	ArrayList<ConcurrentLinkedQueue<Work>> queuesArray;
 	/*
 	this should run the simulation game in parallell mode
 	 */
@@ -39,7 +42,7 @@ public class ParallelGameOfLife implements GameOfLife {
 //	}
 	
 	public boolean[][] get_gen(boolean[][] initialField, int hSplit, int vSplit, int generations) {
-
+		
 		int height = initialField.length;
 		int length = initialField[0].length;
 		// init the field -> copy the field to the local array
@@ -55,22 +58,45 @@ public class ParallelGameOfLife implements GameOfLife {
 		/*
 		for each block we initiate a producer (maybe not needed) ,consumer , the block and we add it to the queues of neighs
 		 */
-		ConcurrentLinkedQueue<Work> nqa = null; // TODO: this is bullshit, but i'm too tired to fix this
-		for(int row=0;row<vSplit-1;row++) {
-			for(int col = 0;col < hSplit-1;col++) {
-				boolean[][] block = extractBlock(input, row, col, (int)Math.floorDiv(height, vSplit), (int)Math.floorDiv(length, hSplit));
-				new LifeConsumer(nqa, block, generations).start(); // TODO: Fix to queue who will hold the block as his first record
-			}
+		queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit*vSplit); // Initializing queues array
+		for(int i=0;i<hSplit*vSplit;i++) {
+			queuesArray.set(i, new ConcurrentLinkedQueue<Work>());
 		}
-		for(int row=vSplit-1;row<vSplit;row++) {
-			for(int col = hSplit-1;col < hSplit;col++) {
-				boolean[][] block = extractBlock(input, row, col, (int)Math.ceil(height/vSplit), (int)Math.ceil(length/hSplit));
-				new LifeConsumer(nqa, block, generations).start();
+		
+		for(int row=0;row<vSplit;row++) {
+			for(int col = 0;col < hSplit;col++) {
+				int rowCellNumber = (int)Math.floorDiv(height, vSplit);
+				int colCellNumber = (int)Math.floorDiv(length, hSplit);
+				if(row == vSplit) {
+					rowCellNumber++;
+				}
+				if(col == hSplit) {
+					colCellNumber++;
+				}
+				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>(); //TODO: Initialize this somehow
+				
+				nqa.add(queuesArray.get(calcIndex(hSplit, row-1, col-1)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row-1, col)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row-1, col+1)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row, col-1)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row, col+1)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row+1, col-1)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row+1, col)));
+				nqa.add(queuesArray.get(calcIndex(hSplit, row+1, col+1)));
+				
+				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(hSplit, row, col));
+				boolean[][] block = extractBlock(input, row, col, rowCellNumber, colCellNumber);
+				blocks.add(new Work(block, 0));
+				new LifeConsumer(nqa, blocks, generations).start();
 			}
 		}
 		//then we need to combine the blocks to a matrix and return it
 		return input;
 	}
+
+private int calcIndex(int hSplit, int row, int col) {
+	return col % hSplit + row * hSplit;
+}
 
 	private int numNeighbors(int x,int y, boolean[][] field ){
 		int counter=(field[x][y]?-1:0);
