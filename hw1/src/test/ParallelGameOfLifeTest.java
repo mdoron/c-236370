@@ -2,15 +2,29 @@ package test;
 
 import main.ParallelGameOfLife;
 import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+
 import org.junit.Test;
 
+/**
+ * This class simple tests main.ParallelGameOfLife. No extreme case are being
+ * checked, only legitimate values. We are checking the logics now because we
+ * don't have time to take care of all irrelevant cases.
+ * 
+ * IMPORTANT: THIS IS NOT TDD !
+ * 
+ * @author doron
+ *
+ */
 public class ParallelGameOfLifeTest {
 	ParallelGameOfLife pgf = new ParallelGameOfLife();
+
 	// setBlock tests
 	@Test
-	public void testVectorBlock () {
-		boolean[][] board = {{true, true, false}, {true, false, false}, {false, true, false}};
-		boolean[][] block = {{false, false, false}};
+	public void testVectorBlock() {
+		boolean[][] board = { { true, true, false }, { true, false, false }, { false, true, false } };
+		boolean[][] block = { { false, false, false } };
 		assertNotEquals(board[0][0], block[0][0]);
 		assertNotEquals(board[0][1], block[0][1]);
 		assertEquals(board[0][2], block[0][2]);
@@ -19,11 +33,11 @@ public class ParallelGameOfLifeTest {
 		assertEquals(board[0][1], block[0][1]);
 		assertEquals(board[0][2], block[0][2]);
 	}
-	
+
 	@Test
-	public void testMatrixBlock () {
-		boolean[][] board = {{true, true, false}, {true, false, false}, {false, true, false}};
-		boolean[][] block = {{false, false}, {true, true}};
+	public void testMatrixBlock() {
+		boolean[][] board = { { true, true, false }, { true, false, false }, { false, true, false } };
+		boolean[][] block = { { false, false }, { true, true } };
 		pgf.setBlock(board, block, 1, 1);
 		assertEquals(board[1][1], block[0][0]);
 		assertEquals(board[1][2], block[0][1]);
@@ -32,7 +46,43 @@ public class ParallelGameOfLifeTest {
 	}
 
 	// extractBlock tests
+	@Test
+	public void testDifferentSizeBlockExtracting() {
+		boolean[][] board = { { true, true, false }, { true, false, false }, { false, true, false } };
+		boolean[][] b1 = pgf.extractBlock(board, 1, 0, 2, 2);
+		boolean[][] b2 = pgf.extractBlock(board, 1, 0, 2, 3);
+		assertEquals(board[1][0], b1[0][0]);
+		assertEquals(board[1][1], b1[0][1]);
+		assertEquals(board[2][0], b1[1][0]);
+		assertEquals(board[2][1], b1[1][1]);
+
+		assertEquals(board[1][0], b2[0][0]);
+		assertEquals(board[1][1], b2[0][1]);
+		assertEquals(board[1][2], b2[0][2]);
+		assertEquals(board[2][0], b2[1][0]);
+		assertEquals(board[2][1], b2[1][1]);
+		assertEquals(board[2][2], b2[1][2]);
+
+	}
+
 	// calcIndex tests
+	@Test
+	public void testIndicesCorrect() {
+		int vSplit = 10;
+		int hSplit = 20;
+		ArrayList<Integer> indices = new ArrayList<Integer>(hSplit * vSplit);
+		for (int row = 0; row < hSplit; row++) {
+			for (int col = 0; col < vSplit; col++) {
+				int i = pgf.calcIndex(vSplit, row, col);
+				indices.add(i);
+			}
+		}
+		
+		for(int i=0; i<hSplit * vSplit; i++) {
+			assertEquals(new Integer(i), indices.get(i));
+		}
+
+	}
 	// setNQA tests
 	// get_gen tests
 	// invoke tests
