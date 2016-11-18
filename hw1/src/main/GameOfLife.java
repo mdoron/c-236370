@@ -1,3 +1,5 @@
+package main;
+
 public interface GameOfLife {
 	/**
 	 * This is the only function to be implemented

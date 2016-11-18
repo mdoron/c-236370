@@ -1,6 +1,9 @@
+package test;
 
+import main.ParallelGameOfLife;
 import static org.junit.Assert.*;
 import org.junit.Test;
+
 public class ParallelGameOfLifeTest {
 	ParallelGameOfLife pgf = new ParallelGameOfLife();
 	// setBlock tests

@@ -1,3 +1,5 @@
+package main;
+
 public class SerialGameOfLife implements GameOfLife {
 	public boolean[][][] invoke(boolean[][] initalField, int hSplit, int vSplit, int generations) {
 		boolean[][][] x=new boolean[2][][];	
