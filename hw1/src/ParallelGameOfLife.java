@@ -141,11 +141,11 @@ public class ParallelGameOfLife implements GameOfLife {
 		}
 	}
 
-	private int calcIndex(int vSplit, int row, int col) {
+	public int calcIndex(int vSplit, int row, int col) {
 		return col % vSplit + row * vSplit;
 	}
 
-	private boolean[][] extractBlock(boolean[][] initialField, int x, int y, int lx, int ly) {
+	public boolean[][] extractBlock(boolean[][] initialField, int x, int y, int lx, int ly) {
 		boolean[][] $ = new boolean[lx][ly];
 		for (int i = 0; i < lx; i++) {
 			for (int j = 0; j < ly; j++) {
@@ -155,7 +155,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		return $;
 	}
 
-	private void setBlock(boolean[][] board, boolean[][] block, int x, int y) {
+	public void setBlock(boolean[][] board, boolean[][] block, int x, int y) {
 		for (int i = 0; i < block.length; i++) {
 			for (int j = 0; j < block[0].length; j++) {
 				board[x + i][y + j] = block[i][j];
