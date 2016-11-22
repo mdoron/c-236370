@@ -57,8 +57,10 @@ public class ParallelGameOfLife implements GameOfLife {
 				// Initialize array of 8 queues which this block is dependent on
 				// their information
 				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
-
-				setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
+				
+				synchronized(queuesArray) {
+					setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
+				}
 
 				// Initialize MY queue
 				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
@@ -66,6 +68,7 @@ public class ParallelGameOfLife implements GameOfLife {
 				blocks.add(new Work(block, 0));
 
 				// Start thread
+				
 				new LifeConsumer(nqa, blocks, generations, row, col).start();
 			}
 		}
@@ -84,7 +87,7 @@ public class ParallelGameOfLife implements GameOfLife {
 
 	public void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
 			int row, int col, int hSplit, final int vSplit) {
-
+		
 		if (row == 0) {
 			nqa.add(0, null);
 			nqa.add(1, null);
