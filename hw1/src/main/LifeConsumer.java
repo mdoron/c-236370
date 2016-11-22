@@ -32,6 +32,15 @@ public class LifeConsumer extends Thread {
     }
 
 
+    public boolean[][] getBlock() {
+        return block;
+    }
+
+    public boolean[][] getPrevBlock() {
+        //TODO: check this
+        return nextBlock;
+    }
+
     public void run() {
 
         nextBlock = new boolean[block.length][];
@@ -125,24 +134,21 @@ public class LifeConsumer extends Thread {
     }
 
 
-    private int numNeighbors(int x, int y, boolean[][] field) {
+    public int numNeighbors(int x, int y, boolean[][] field) {
+        boolean[] flags = {false,false,false,false,false,false,false};
         int counter = (field[x][y] ? -1 : 0);
         for (int i = x - 1; i <= x + 1; i++) {
-            if ((i < 0) || (i >= field.length)) {
-                //TODO: get from producers
-                continue;
-            }
             try {
                 for (int j = y - 1; j <= y + 1; j++) {
-                    if (i > 0 && i < field.length && j > 0 && j < field[0].length) counter += (field[i][j] ? 1 : 0);
-                    if (i < 0 && j < 0) counter += checkNeigh(DIR.UPLEFT, i, j);
-                    if (i < 0 && j >= field[0].length) counter += checkNeigh(DIR.UPRIGHT, i, j);
-                    if (i < 0 && j > 0 && j < field[0].length) counter += checkNeigh(DIR.UP, i, j);
-                    if (i >= field.length && j < 0) counter += checkNeigh(DIR.DOWNLEFT, i, j);
-                    if (i >= field.length && j >= field[0].length) counter += checkNeigh(DIR.DOWNRIGHT, i, j);
-                    if (i >= field.length && j > 0 && j < field[0].length) counter += checkNeigh(DIR.DOWN, i, j);
-                    if (i > 0 && i < field.length && j < 0) counter += checkNeigh(DIR.LEFT, i, j);
-                    if (i > 0 && i < field.length && j >= field[0].length) counter += checkNeigh(DIR.RIGHT, i, j);
+                    if (i >= 0 && i < field.length && j >= 0 && j < field[0].length) { counter += (field[i][j] ? 1 : 0); continue; }
+                    if (i < 0 && j < 0 && !flags[DIR.UPLEFT.ordinal()]) {  counter += checkNeigh(DIR.UPLEFT, i, j); flags[DIR.UPLEFT.ordinal()]=true; continue; }
+                    if (i < 0 && j >= field[0].length && !flags[DIR.UPRIGHT.ordinal()]) {  counter += checkNeigh(DIR.UPRIGHT, i, j); flags[DIR.UPRIGHT.ordinal()]=true;  continue; }
+                    if (i < 0 && j > 0 && j < field[0].length && !flags[DIR.UP.ordinal()])  { counter += checkNeigh(DIR.UP, i, j);  flags[DIR.UP.ordinal()]=true; continue; }
+                    if (i >= field.length && j < 0 && !flags[DIR.DOWNLEFT.ordinal()])  { counter += checkNeigh(DIR.DOWNLEFT, i, j);  flags[DIR.DOWNLEFT.ordinal()]=true;  continue; }
+                    if (i >= field.length && j >= field[0].length && !flags[DIR.DOWNRIGHT.ordinal()])  { counter += checkNeigh(DIR.DOWNRIGHT, i, j);  flags[DIR.DOWNRIGHT.ordinal()]=true;  continue; }
+                    if (i >= field.length && j > 0 && j < field[0].length && !flags[DIR.DOWN.ordinal()])  { counter += checkNeigh(DIR.DOWN, i, j);  flags[DIR.DOWN.ordinal()]=true; continue; }
+                    if (i > 0 && i < field.length && j < 0 && !flags[DIR.LEFT.ordinal()])  { counter += checkNeigh(DIR.LEFT, i, j); flags[DIR.LEFT.ordinal()]=true;  continue; }
+                    if (i > 0 && i < field.length && j >= field[0].length && !flags[DIR.RIGHT.ordinal()])  { counter += checkNeigh(DIR.RIGHT, i, j); flags[DIR.RIGHT.ordinal()]=true;  continue; }
                 }
             }
             catch(Exception e) {
