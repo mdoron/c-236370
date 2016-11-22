@@ -1,5 +1,6 @@
 package main;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,7 +27,9 @@ public class LifeConsumer extends Thread {
         NeighboursQueueArray = nqa;
         this.blockHistory = blockHistory;
         this.generations = generations;
-        this.block = blockHistory.element().getBlock();
+        synchronized (blockHistory) {
+            this.block = blockHistory.element().getBlock();
+        }
         this.row = row;
         this.col = col;
     }
@@ -63,7 +66,7 @@ public class LifeConsumer extends Thread {
             tmp = block;
             block = nextBlock;
             blockHistory.add(new Work(block,genNow));
-            notifyAll();       //notify producer maybe we should do notify instead
+            blockHistory.notifyAll();       //notify producer maybe we should do notify instead
             nextBlock = tmp;
         }
     }
@@ -81,11 +84,19 @@ public class LifeConsumer extends Thread {
         ConcurrentLinkedQueue q = NeighboursQueueArray.get(d.ordinal());
         if(q == null) return 0;
         if(q.isEmpty()) {
-            wait();
+            q.wait();
         }
-        Work w = (Work) q.poll();
+        Work w = (Work)q.element();
+        //Work[] warr = (Work[]) q.;
+        for(Object w2 : q) {
+            if(genNow<=((Work)w2).getGen()) {
+                w = (Work)w2;
+                break;
+            }
+
+        }
         if(genNow > w.getGen()) {
-            wait();
+            q.wait();
         }
         int counter = 0;
         //assuming all is fine till here, now we take the neighs from block
