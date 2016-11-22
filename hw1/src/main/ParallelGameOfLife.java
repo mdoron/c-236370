@@ -22,7 +22,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		int length = initialField[0].length;
 
 		// Local field initialization
-		// TODO: parallelize this @mdoron @ravivos
+		// TODO: Nice-to-Have: parallelize this @mdoron @ravivos
 		boolean[][] input = new boolean[initialField.length][];
 		for (int i = 0; i < initialField.length; i++) {
 			input[i] = new boolean[initialField[0].length];
@@ -82,7 +82,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		return input;
 	}
 
-	private void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
+	public void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
 			int row, int col, int hSplit, final int vSplit) {
 
 		if (row == 0) {

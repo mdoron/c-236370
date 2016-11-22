@@ -1,9 +1,12 @@
 package test;
 
 import main.ParallelGameOfLife;
+import main.Work;
+
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.junit.Test;
 
@@ -77,14 +80,65 @@ public class ParallelGameOfLifeTest {
 				indices.add(i);
 			}
 		}
-		
-		for(int i=0; i<hSplit * vSplit; i++) {
+
+		for (int i = 0; i < hSplit * vSplit; i++) {
 			assertEquals(new Integer(i), indices.get(i));
 		}
 
 	}
+
 	// setNQA tests
+	@Test
+	public void testSetInsiderCellNQA() {
+		int row = 5, col = 10, hSplit = 10, vSplit = 20;
+		
+		ArrayList<ConcurrentLinkedQueue<Work>> queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit*vSplit);
+		for (int i=0; i<hSplit*vSplit;i++) {
+			queuesArray.add(i, new ConcurrentLinkedQueue<Work>());
+		}
+		ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
+		pgf.setNQA(queuesArray,  nqa, row, col, hSplit, vSplit);
+		for(int i=0; i<nqa.size();i++) {
+			assertNotNull(nqa.get(i));
+		}
+	}
+	
+	@Test
+	public void testSetUpperLeftCellNQA() {
+		int row = 0, col = 0, hSplit = 10, vSplit = 20;
+		
+		ArrayList<ConcurrentLinkedQueue<Work>> queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit*vSplit);
+		for (int i=0; i<hSplit*vSplit;i++) {
+			queuesArray.add(i, new ConcurrentLinkedQueue<Work>());
+		}
+		ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
+		pgf.setNQA(queuesArray,  nqa, row, col, hSplit, vSplit);
+		for(int i=0; i<4;i++) {
+			assertNull(nqa.get(i));
+		}
+		assertNotNull(nqa.get(4));
+		assertNull(nqa.get(5));
+		for(int i=6; i<7;i++) {
+			assertNotNull(nqa.get(i));
+		}
+	}
+	
+	@Test
+	public void testByRefQueue(){
+		int row = 0, col = 0, hSplit = 10, vSplit = 20;
+		
+		ArrayList<ConcurrentLinkedQueue<Work>> queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit*vSplit);
+		for (int i=0; i<hSplit*vSplit;i++) {
+			queuesArray.add(i, new ConcurrentLinkedQueue<Work>());
+		}
+		ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
+		pgf.setNQA(queuesArray,  nqa, row, col, hSplit, vSplit);
+		
+		boolean [][] block = {{true}};
+		nqa.get(4).add(new Work(block, 0));
+		assertNotNull(pgf.calcIndex(vSplit, row+1, col));
+	}
+	
 	// get_gen tests
 	// invoke tests
-
 }
