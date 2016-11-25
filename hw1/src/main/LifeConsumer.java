@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * block, the num of generations
  */
 public class LifeConsumer extends Thread {
-	ArrayList<ConcurrentLinkedQueue<Work>> NeighboursQueueArray;
+	ArrayList<ConcurrentLinkedQueue<Work>> nqa;
 	ConcurrentLinkedQueue<Work> blockHistory;
 	boolean[][] block; // same with producer
 	int generations;
@@ -26,7 +26,7 @@ public class LifeConsumer extends Thread {
 	// Call is synchronized in ParallelGameOfLife
 	public LifeConsumer(ArrayList<ConcurrentLinkedQueue<Work>> nqa, ConcurrentLinkedQueue<Work> blockHistory,
 			int generations, int row, int col) {
-		NeighboursQueueArray = nqa;
+		this.nqa = nqa;
 		this.blockHistory = blockHistory;
 		this.generations = generations;
 		this.block = blockHistory.element().getBlock();
@@ -84,13 +84,13 @@ public class LifeConsumer extends Thread {
 	 */
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
-		synchronized (NeighboursQueueArray) {
-			q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal())); //TODO: NeighboursQueueArray.get(d.ordinal()) can get null by our design. @ravivos
-			while (NeighboursQueueArray.get(d.ordinal()).isEmpty()) {
-				NeighboursQueueArray.wait();
-				q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+		synchronized (this.nqa) {
+			q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal())); //TODO: NeighboursQueueArray.get(d.ordinal()) can get null by our design. @ravivos
+			while (this.nqa.get(d.ordinal()).isEmpty()) {
+				this.nqa.wait();
+				q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal()));
 			}
-			NeighboursQueueArray.notifyAll();
+			this.nqa.notifyAll();
 		}
 
 		if (q == null)
