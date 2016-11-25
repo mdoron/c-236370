@@ -43,8 +43,20 @@ public class Ex1 {
 		}
 		GameOfLife sGol=new SerialGameOfLife();
 		GameOfLife pGol=new ParallelGameOfLife();
-		
-		boolean[][][] resultSerial=sGol.invoke(field,hSplit,vSplit, nGenerations);	
+
+
+		/* from this point until the next comment is the init of the small test
+		change field2 to be whatever matrix you want similar to what I did
+		 */
+		boolean[][] field2={{false,false,false,false},{false,true,true,false},{false,true,true,false},{false,false,false,false}};
+		hSplit = 2;
+		vSplit = 2;
+		nGenerations=5;
+		field = field2;
+		/*
+		UNTIL HERE
+		 */
+		boolean[][][] resultSerial=sGol.invoke(field2,hSplit,vSplit, nGenerations);
 		
 		//printArray(resultSerial);
 		try{
@@ -58,6 +70,25 @@ public class Ex1 {
 		
 		boolean[][][] resultParallel=pGol.invoke(field,hSplit,vSplit, nGenerations);
 
+		System.out.println("Serial 0:");
+		System.out.println("==============");
+		System.out.println("");
+		printArray(resultSerial[0]);
+		System.out.println("");
+		System.out.println("Serial 1:");
+		System.out.println("==============");
+		System.out.println("");
+		printArray(resultSerial[1]);
+		System.out.println("");
+		System.out.println("parallel 0:");
+		System.out.println("==============");
+		System.out.println("");
+		printArray(resultParallel[0]);
+		System.out.println("");
+		System.out.println("parallel 1:");
+		System.out.println("==============");
+		System.out.println("");
+		printArray(resultParallel[1]);
 		if (compareArrays(resultParallel[0],resultSerial[0]) && compareArrays(resultParallel[1],resultSerial[1])){
 			System.out.println("Success!");
 		}else{

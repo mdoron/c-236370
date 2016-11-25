@@ -91,7 +91,7 @@ public class LifeConsumer extends Thread {
             catch(NullPointerException e) { return 0; }
             if (q == null)
                 return 0;
-            while (NeighboursQueueArray.get(d.ordinal()).isEmpty()) {
+            while (q.isEmpty()) {
 				NeighboursQueueArray.wait();
 				q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
 			}
@@ -99,9 +99,9 @@ public class LifeConsumer extends Thread {
 		}
 
 
-//		if (q.isEmpty()) {
-//			q.wait();
-//		}
+		while (q.isEmpty()) {
+			q.wait();
+		}
 		Work w = (Work) q.element();
 		// Work[] warr = (Work[]) q.;
 		for (Object w2 : q) {
@@ -162,7 +162,7 @@ public class LifeConsumer extends Thread {
 	}
 
 	public int numNeighbors(int x, int y, boolean[][] field) {
-		boolean[] flags = { false, false, false, false, false, false, false };
+		boolean[] flags = { false, false, false, false, false, false, false, false };
 		int counter = (field[x][y] ? -1 : 0);
 		for (int i = x - 1; i <= x + 1; i++) {
 			try {
