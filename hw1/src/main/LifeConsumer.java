@@ -85,16 +85,17 @@ public class LifeConsumer extends Thread {
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
 		synchronized (NeighboursQueueArray) {
-			q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal())); //TODO: NeighboursQueueArray.get(d.ordinal()) can get null by our design. @ravivos
-			while (NeighboursQueueArray.get(d.ordinal()).isEmpty()) {
+			q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+            if (q == null)
+                return 0;
+            while (NeighboursQueueArray.get(d.ordinal()).isEmpty()) {
 				NeighboursQueueArray.wait();
 				q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
 			}
 			NeighboursQueueArray.notifyAll();
 		}
 
-		if (q == null)
-			return 0;
+
 //		if (q.isEmpty()) {
 //			q.wait();
 //		}
