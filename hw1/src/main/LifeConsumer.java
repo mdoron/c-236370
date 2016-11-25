@@ -85,7 +85,10 @@ public class LifeConsumer extends Thread {
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
 		synchronized (NeighboursQueueArray) {
-			q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+            if(NeighboursQueueArray == null)
+                return 0;
+			try { q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal())); }
+            catch(NullPointerException e) { return 0; }
             if (q == null)
                 return 0;
             while (NeighboursQueueArray.get(d.ordinal()).isEmpty()) {
