@@ -1,14 +1,12 @@
 package main;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+
 /**
- * Created by raviv on 16/11/2016.
- */
-/*
+ * @author ravivos
+ * @author mdoron
  * each consumer holds a queue which has gets the queue of blocks array and the
  * block, the num of generations
  */
@@ -85,19 +83,25 @@ public class LifeConsumer extends Thread {
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
 		synchronized (this.nqa) {
-			q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal())); //TODO: NeighboursQueueArray.get(d.ordinal()) can get null by our design. @ravivos
-			while (this.nqa.get(d.ordinal()).isEmpty()) {
+			if (this.nqa == null)
+				return 0;
+			try {
+				q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal()));
+			} catch (NullPointerException e) {
+				return 0;
+			}
+			if (q == null)
+				return 0;
+			while (q.isEmpty()) {
 				this.nqa.wait();
 				q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal()));
 			}
 			this.nqa.notifyAll();
 		}
 
-		if (q == null)
-			return 0;
-//		if (q.isEmpty()) {
-//			q.wait();
-//		}
+		while (q.isEmpty()) {
+			q.wait();
+		}
 		Work w = (Work) q.element();
 		// Work[] warr = (Work[]) q.;
 		for (Object w2 : q) {
@@ -107,9 +111,9 @@ public class LifeConsumer extends Thread {
 			}
 
 		}
-//		if (genNow > w.getGen()) {
-//			q.wait();
-//		}
+		// if (genNow > w.getGen()) {
+		// q.wait();
+		// }
 		int $ = 0;
 		// assuming all is fine till here, now we take the neighs from block
 		switch (d) {
@@ -139,7 +143,7 @@ public class LifeConsumer extends Thread {
 		case LEFT:
 			for (int row = 0; row < w.getBlock().length; row++) {
 				if (row >= i - 1 && row <= i + 1) {
-					$ += w.getBlock()[row][w.getBlock()[row].length-1] ? 1 : 0;
+					$ += w.getBlock()[row][w.getBlock()[row].length - 1] ? 1 : 0;
 				}
 			}
 			return $;
@@ -158,7 +162,7 @@ public class LifeConsumer extends Thread {
 	}
 
 	public int numNeighbors(int x, int y, boolean[][] field) {
-		boolean[] flags = { false, false, false, false, false, false, false };
+		boolean[] flags = { false, false, false, false, false, false, false, false };
 		int counter = (field[x][y] ? -1 : 0);
 		for (int i = x - 1; i <= x + 1; i++) {
 			try {
