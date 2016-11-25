@@ -71,8 +71,7 @@ public class ParallelGameOfLife implements GameOfLife {
 				// Start thread
 				
 				synchronized(blocks) {
-//					new LifeConsumer(nqa, blocks, generations, row, col).start();
-					int x;
+					new LifeConsumer(nqa, blocks, generations, row, col).start();
 				}
 			}
 		}
