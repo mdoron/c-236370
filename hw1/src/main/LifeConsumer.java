@@ -64,26 +64,26 @@ public class LifeConsumer extends Thread {
 				}
 			}
 
-            System.out.println("GEN - " + genNow);
+/*            System.out.println("GEN - " + genNow);
             System.out.println("==========");
             Ex1.printArray(block);
             System.out.println("==========");
             Ex1.printArray(nextBlock);
-            System.out.println("==========");
+            System.out.println("==========");*/
 			boolean[][] tmp;
 			tmp = block;
 			block = nextBlock;
-
+            nextBlock = tmp;
 
 			synchronized (blockHistory) {
-                System.out.println("WORKING ON THIS FUCKING SHIT:");
+                /*System.out.println("WORKING ON THIS FUCKING SHIT:");
                 System.out.println("==========");
-                Ex1.printArray(block);
+                Ex1.printArray(block);*/
 				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
 											// notify instead
 			}
-			nextBlock = tmp;
+
 		}
 	}
 

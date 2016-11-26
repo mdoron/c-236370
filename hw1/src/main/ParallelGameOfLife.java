@@ -78,9 +78,20 @@ public class ParallelGameOfLife implements GameOfLife {
 		}
 		// Combine all information into input.
 		// state to our queue
-		for (int row = 0; row < hSplit - 1; row++) {
-			for (int col = 0; col < vSplit - 1; col++) {
-				setBlock(input, queuesArray.get(calcIndex(vSplit, row, col)).poll().getBlock(), row * rowCellNumber,
+		for (int row = 0; row < hSplit; row++) {
+			for (int col = 0; col < vSplit; col++) {
+				Work w = (Work) queuesArray.get(calcIndex(vSplit, row, col)).element();
+				// Work[] warr = (Work[]) q.;
+				for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
+					if (generations <= ((Work) w2).getGen()) {
+						w = (Work) w2;
+						break;
+					}
+
+				}
+				System.out.println("RESULT:");
+				Ex1.printArray(w.getBlock());
+				setBlock(input, w.getBlock(), row * rowCellNumber,
 						col * colCellNumber);
 			}
 		}
