@@ -1,17 +1,19 @@
 package main;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-
 /**
- * @author ravivos
- * @author mdoron
+ * Created by raviv on 16/11/2016.
+ */
+/*
  * each consumer holds a queue which has gets the queue of blocks array and the
  * block, the num of generations
  */
 public class LifeConsumer extends Thread {
-	ArrayList<ConcurrentLinkedQueue<Work>> nqa;
+	ArrayList<ConcurrentLinkedQueue<Work>> NeighboursQueueArray;
 	ConcurrentLinkedQueue<Work> blockHistory;
 	boolean[][] block; // same with producer
 	int generations;
@@ -24,7 +26,7 @@ public class LifeConsumer extends Thread {
 	// Call is synchronized in ParallelGameOfLife
 	public LifeConsumer(ArrayList<ConcurrentLinkedQueue<Work>> nqa, ConcurrentLinkedQueue<Work> blockHistory,
 			int generations, int row, int col) {
-		this.nqa = nqa;
+		NeighboursQueueArray = nqa;
 		this.blockHistory = blockHistory;
 		this.generations = generations;
 		this.block = blockHistory.element().getBlock();
@@ -56,12 +58,25 @@ public class LifeConsumer extends Thread {
 					nextBlock[i][j] = false;
 					if (numNeighbors == 3 || (block[i][j] && numNeighbors == 2)) {
 						nextBlock[i][j] = true;
+
 					}
+					/*if(block[i][j]!=nextBlock[i][j]) {
+                        System.out.println("DIFF - " +  block[i][j] + " " + nextBlock[i][j]);
+                    }*/
 				}
 			}
+
+            System.out.println("GEN - " + genNow);
+            System.out.println("==========");
+            Ex1.printArray(block);
+            System.out.println("==========");
+            Ex1.printArray(nextBlock);
+            System.out.println("==========");
 			boolean[][] tmp;
 			tmp = block;
 			block = nextBlock;
+
+
 			synchronized (blockHistory) {
 				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
@@ -82,22 +97,22 @@ public class LifeConsumer extends Thread {
 	 */
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
-		synchronized (this.nqa) {
-			if (this.nqa == null)
-				return 0;
-			try {
-				q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal()));
-			} catch (NullPointerException e) {
-				return 0;
+		synchronized (NeighboursQueueArray) {
+            if(NeighboursQueueArray == null)
+                return 0;
+            if(NeighboursQueueArray.get(d.ordinal())==null) {
+                return 0;
+            }
+            q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+            if (q == null)
+                return 0;
+            while (q.isEmpty()) {
+				NeighboursQueueArray.wait();
+				q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
 			}
-			if (q == null)
-				return 0;
-			while (q.isEmpty()) {
-				this.nqa.wait();
-				q = new ConcurrentLinkedQueue<Work>(this.nqa.get(d.ordinal()));
-			}
-			this.nqa.notifyAll();
+			NeighboursQueueArray.notifyAll();
 		}
+
 
 		while (q.isEmpty()) {
 			q.wait();
@@ -111,9 +126,9 @@ public class LifeConsumer extends Thread {
 			}
 
 		}
-		// if (genNow > w.getGen()) {
-		// q.wait();
-		// }
+//		if (genNow > w.getGen()) {
+//			q.wait();
+//		}
 		int $ = 0;
 		// assuming all is fine till here, now we take the neighs from block
 		switch (d) {
@@ -143,7 +158,7 @@ public class LifeConsumer extends Thread {
 		case LEFT:
 			for (int row = 0; row < w.getBlock().length; row++) {
 				if (row >= i - 1 && row <= i + 1) {
-					$ += w.getBlock()[row][w.getBlock()[row].length - 1] ? 1 : 0;
+					$ += w.getBlock()[row][w.getBlock()[row].length-1] ? 1 : 0;
 				}
 			}
 			return $;
