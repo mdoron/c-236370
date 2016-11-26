@@ -103,13 +103,13 @@ public class ParallelGameOfLife implements GameOfLife {
 			int row, int col, int hSplit, int vSplit) {
 
 		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col - 1));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col + 1));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row, col - 1));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row, col + 1));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col - 1));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col));
-		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col + 1));
+		nqa.add(1, getQueue(queuesArray, hSplit, vSplit, row - 1, col));
+		nqa.add(2, getQueue(queuesArray, hSplit, vSplit, row - 1, col + 1));
+		nqa.add(3, getQueue(queuesArray, hSplit, vSplit, row, col - 1));
+		nqa.add(4, getQueue(queuesArray, hSplit, vSplit, row, col + 1));
+		nqa.add(5, getQueue(queuesArray, hSplit, vSplit, row + 1, col - 1));
+		nqa.add(6, getQueue(queuesArray, hSplit, vSplit, row + 1, col));
+		nqa.add(7, getQueue(queuesArray, hSplit, vSplit, row + 1, col + 1));
 	}
 
 	/**
@@ -118,6 +118,9 @@ public class ParallelGameOfLife implements GameOfLife {
 	 */
 	public ConcurrentLinkedQueue<Work> getQueue(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, int hSplit,
 			int vSplit, int row, int col) {
+		if (row < 0 || col < 0 || row >= hSplit || col >= vSplit) {
+			return null;
+		}
 		int index = calcIndex(vSplit, row, col);
 		if (index >= hSplit * vSplit || index < 0) {
 			return null;
