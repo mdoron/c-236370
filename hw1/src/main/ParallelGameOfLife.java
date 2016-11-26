@@ -76,7 +76,6 @@ public class ParallelGameOfLife implements GameOfLife {
 			}
 		}
 		// Combine all information into input.
-		// TODO: @ravivos, in the last generation we still push our current
 		// state to our queue
 		for (int row = 0; row < hSplit-1; row++) {
 			for (int col = 0; col < vSplit-1; col++) {
