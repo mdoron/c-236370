@@ -41,7 +41,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		// Calculate size of cells in inside block
 		int rowCellNumber = (int) Math.floorDiv(height, hSplit);
 		int colCellNumber = (int) Math.floorDiv(length, vSplit);
-		
+
 		// Dividing into sub-tasks. Each thread gets a block and runs it
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
@@ -59,18 +59,19 @@ public class ParallelGameOfLife implements GameOfLife {
 				// Initialize array of 8 queues which this block is dependent on
 				// their information
 				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
-				
-				synchronized(queuesArray) {
+
+				synchronized (queuesArray) {
 					setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
 				}
 
 				// Initialize MY queue
 				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
-				boolean[][] block = extractBlock(input, row * rowCellNumber, col * colCellNumber, rowCellNumber, colCellNumber);
+				boolean[][] block = extractBlock(input, row * rowCellNumber, col * colCellNumber, rowCellNumber,
+						colCellNumber);
 				blocks.add(new Work(block, 0));
 				// Start thread
-				
-				synchronized(blocks) {
+
+				synchronized (blocks) {
 					new LifeConsumer(nqa, blocks, generations, row, col).start();
 				}
 			}
@@ -78,8 +79,8 @@ public class ParallelGameOfLife implements GameOfLife {
 		// Combine all information into input.
 		// TODO: @ravivos, in the last generation we still push our current
 		// state to our queue
-		for (int row = 0; row < hSplit-1; row++) {
-			for (int col = 0; col < vSplit-1; col++) {
+		for (int row = 0; row < hSplit - 1; row++) {
+			for (int col = 0; col < vSplit - 1; col++) {
 				setBlock(input, queuesArray.get(calcIndex(vSplit, row, col)).poll().getBlock(), row * rowCellNumber,
 						col * colCellNumber);
 			}
@@ -89,85 +90,29 @@ public class ParallelGameOfLife implements GameOfLife {
 	}
 
 	public void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
-			int row, int col, int hSplit, final int vSplit) {
-		
-		if (row == 0) {
-			nqa.add(0, null);
-			nqa.add(1, null);
-			nqa.add(2, null);
-			if (col == 0) {
-				nqa.add(3, null);
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-				nqa.add(5, null);
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
-			} else if (col == vSplit-1) {
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, null);
-				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, null);
-			} else {
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
-			}
-		} else if (row == hSplit-1) {
-			if (col == 0) {
-				nqa.add(0, null);
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
-				nqa.add(3, null);
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-			} else if (col == vSplit-1) {
-				nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, null);
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, null);
-			} else {
-				nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-			}
-			nqa.add(5, null);
-			nqa.add(6, null);
-			nqa.add(7, null);
-		} else {
-			if (col == 0) {
-				nqa.add(0, null);
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
-				nqa.add(3, null);
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-				nqa.add(5, null);
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
-			} else if (col == vSplit-1) {
-				nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, null);
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, null);
-				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, null);
-				
-			} else {
-				nqa.add(0, queuesArray.get(calcIndex(vSplit, row - 1, col - 1)));
-				nqa.add(1, queuesArray.get(calcIndex(vSplit, row - 1, col)));
-				nqa.add(2, queuesArray.get(calcIndex(vSplit, row - 1, col + 1)));
-				nqa.add(3, queuesArray.get(calcIndex(vSplit, row, col - 1)));
-				nqa.add(4, queuesArray.get(calcIndex(vSplit, row, col + 1)));
-				nqa.add(5, queuesArray.get(calcIndex(vSplit, row + 1, col - 1)));
-				nqa.add(6, queuesArray.get(calcIndex(vSplit, row + 1, col)));
-				nqa.add(7, queuesArray.get(calcIndex(vSplit, row + 1, col + 1)));
-			}
+			int row, int col, int hSplit, int vSplit) {
+
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col - 1));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col + 1));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row, col - 1));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row, col + 1));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col - 1));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col));
+		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row + 1, col + 1));
+	}
+
+	/**
+	 * 
+	 * @return the right queue or null
+	 */
+	public ConcurrentLinkedQueue<Work> getQueue(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, int hSplit,
+			int vSplit, int row, int col) {
+		int index = calcIndex(vSplit, row, col);
+		if (index >= hSplit * vSplit || index < 0) {
+			return null;
 		}
+		return queuesArray.get(index);
 	}
 
 	public int calcIndex(int vSplit, int row, int col) {
