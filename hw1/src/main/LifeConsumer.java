@@ -1,8 +1,6 @@
 package main;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -13,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * block, the num of generations
  */
 public class LifeConsumer extends Thread {
-	ArrayList<ConcurrentLinkedQueue<Work>> NeighboursQueueArray;
+	ArrayList<ConcurrentLinkedQueue<Work>> nqa;
 	ConcurrentLinkedQueue<Work> blockHistory;
 	boolean[][] block; // same with producer
 	int generations;
@@ -26,7 +24,7 @@ public class LifeConsumer extends Thread {
 	// Call is synchronized in ParallelGameOfLife
 	public LifeConsumer(ArrayList<ConcurrentLinkedQueue<Work>> nqa, ConcurrentLinkedQueue<Work> blockHistory,
 			int generations, int row, int col) {
-		NeighboursQueueArray = nqa;
+		this.nqa = nqa;
 		this.blockHistory = blockHistory;
 		this.generations = generations;
 		this.block = blockHistory.element().getBlock();
@@ -78,6 +76,9 @@ public class LifeConsumer extends Thread {
 
 
 			synchronized (blockHistory) {
+                System.out.println("WORKING ON THIS FUCKING SHIT:");
+                System.out.println("==========");
+                Ex1.printArray(block);
 				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
 											// notify instead
@@ -97,20 +98,20 @@ public class LifeConsumer extends Thread {
 	 */
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
 		ConcurrentLinkedQueue<Work> q;
-		synchronized (NeighboursQueueArray) {
-            if(NeighboursQueueArray == null)
+		synchronized (nqa) {
+            if(nqa == null)
                 return 0;
-            if(NeighboursQueueArray.get(d.ordinal())==null) {
+            if(nqa.get(d.ordinal())==null) {
                 return 0;
             }
-            q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+            q = new ConcurrentLinkedQueue<Work>(nqa.get(d.ordinal()));
             if (q == null)
                 return 0;
             while (q.isEmpty()) {
-				NeighboursQueueArray.wait();
-				q = new ConcurrentLinkedQueue<Work>(NeighboursQueueArray.get(d.ordinal()));
+				nqa.wait();
+				q = new ConcurrentLinkedQueue<Work>(nqa.get(d.ordinal()));
 			}
-			NeighboursQueueArray.notifyAll();
+			nqa.notifyAll();
 		}
 
 
