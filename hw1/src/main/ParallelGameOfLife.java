@@ -1,11 +1,10 @@
 package main;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ParallelGameOfLife implements GameOfLife {
 
-	ArrayList<ConcurrentLinkedQueue<Work>> queuesArray;
+	ArrayList<OurConcurrentQueue<Work>> queuesArray;
 
 	public boolean[][][] invoke(boolean[][] initalField, int hSplit, int vSplit, int generations) {
 		boolean[][][] x = new boolean[2][][];
@@ -33,9 +32,9 @@ public class ParallelGameOfLife implements GameOfLife {
 
 		// Initialize global queues array - each block has a queue which it
 		// writes its new state into it 8 times, and other blocks read from it
-		queuesArray = new ArrayList<ConcurrentLinkedQueue<Work>>(hSplit * vSplit);
+		queuesArray = new ArrayList<OurConcurrentQueue<Work>>(hSplit * vSplit);
 		for (int i = 0; i < hSplit * vSplit; i++) {
-			queuesArray.add(i, new ConcurrentLinkedQueue<Work>());
+			queuesArray.add(i, new OurConcurrentQueue<Work>());
 		}
 
 		// Calculate size of cells in inside block
@@ -55,14 +54,14 @@ public class ParallelGameOfLife implements GameOfLife {
 
 				// Initialize array of 8 queues which this block is dependent on
 				// their information
-				ArrayList<ConcurrentLinkedQueue<Work>> nqa = new ArrayList<ConcurrentLinkedQueue<Work>>();
+				ArrayList<OurConcurrentQueue<Work>> nqa = new ArrayList<OurConcurrentQueue<Work>>();
 
 				synchronized (queuesArray) {
 					setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
 				}
 
 				// Initialize MY queue
-				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
+				OurConcurrentQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
 
 				int rPos = row * rowCellNumber;
 				int cPos = col * colCellNumber;
@@ -91,14 +90,19 @@ public class ParallelGameOfLife implements GameOfLife {
 
 				Work w = null;
 				while (w == null) {
-					for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
+                    for(int i=0;i<queuesArray.get(calcIndex(vSplit, row, col)).size();i++) {
+					    Object w2 = queuesArray.get(calcIndex(vSplit, row, col)).get(i);
 						if (generations <= ((Work) w2).getGen()) {
 							w = (Work) w2;
 							break;
 						}
 					}
 				}
-
+				synchronized (System.out) {
+                    System.out.println();
+                    System.out.println();
+                    Ex1.printArray(w.getBlock());
+                }
 				setBlock(input, w.getBlock(), row * rowCellNumber, col * colCellNumber);
 			}
 		}
@@ -106,7 +110,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		return input;
 	}
 
-	public void setNQA(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, ArrayList<ConcurrentLinkedQueue<Work>> nqa,
+	public void setNQA(ArrayList<OurConcurrentQueue<Work>> queuesArray, ArrayList<OurConcurrentQueue<Work>> nqa,
 			int row, int col, int hSplit, int vSplit) {
 
 		nqa.add(0, getQueue(queuesArray, hSplit, vSplit, row - 1, col - 1));
@@ -123,7 +127,7 @@ public class ParallelGameOfLife implements GameOfLife {
 	 * 
 	 * @return the right queue or null
 	 */
-	public ConcurrentLinkedQueue<Work> getQueue(ArrayList<ConcurrentLinkedQueue<Work>> queuesArray, int hSplit,
+	public OurConcurrentQueue<Work> getQueue(ArrayList<OurConcurrentQueue<Work>> queuesArray, int hSplit,
 			int vSplit, int row, int col) {
 		if (row < 0 || col < 0 || row >= hSplit || col >= vSplit) {
 			return null;

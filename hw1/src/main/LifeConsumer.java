@@ -1,7 +1,7 @@
 package main;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Objects;
 
 /**
  * Created by raviv on 16/11/2016.
@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * block, the num of generations
  */
 public class LifeConsumer extends Thread {
-	ArrayList<ConcurrentLinkedQueue<Work>> nqa;
-	ConcurrentLinkedQueue<Work> blockHistory;
+	ArrayList<OurConcurrentQueue<Work>> nqa;
+	OurConcurrentQueue<Work> blockHistory;
 	boolean[][] block; // same with producer
 	int generations;
 	boolean[][] nextBlock;
@@ -22,7 +22,7 @@ public class LifeConsumer extends Thread {
 	int genNow;
 
 	// Call is synchronized in ParallelGameOfLife
-	public LifeConsumer(ArrayList<ConcurrentLinkedQueue<Work>> nqa, ConcurrentLinkedQueue<Work> blockHistory,
+	public LifeConsumer(ArrayList<OurConcurrentQueue<Work>> nqa, OurConcurrentQueue<Work> blockHistory,
 			int generations, int row, int col) {
 		this.nqa = nqa;
 		this.blockHistory = blockHistory;
@@ -80,7 +80,7 @@ public class LifeConsumer extends Thread {
 		if (nqa.get(d.ordinal()) == null) {
 			return 0;
 		}
-		ConcurrentLinkedQueue<Work> q = nqa.get(d.ordinal());
+		OurConcurrentQueue<Work> q = nqa.get(d.ordinal());
 		if (q == null)
 			return 0;
 
@@ -212,7 +212,7 @@ public class LifeConsumer extends Thread {
 		if (nqa.get(d.ordinal()) == null) {
 			return 0;
 		}
-		ConcurrentLinkedQueue<Work> q = nqa.get(d.ordinal());
+		OurConcurrentQueue<Work> q = nqa.get(d.ordinal());
 		if (q == null)
 			return 0;
 
@@ -224,7 +224,8 @@ public class LifeConsumer extends Thread {
 			}
 			
 			while (w == null) {
-				for (Object w2 : q) {
+                for(int ii=0;ii<q.size();ii++) {
+                    Object w2 = q.get(ii);
 					if (genNow == ((Work) w2).getGen() + 1) {
 						w = (Work) w2;
 						break;

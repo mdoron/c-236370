@@ -51,20 +51,20 @@ public class Ex1 {
 		//boolean[][] field2={{true,false,false,false},{false,true,true,false},{false,true,true,true},{false,false,false,false}};// - works
 		//boolean[][] field2={{true,false,false,false,true},{false,true,true,false,true},{false,true,true,true,false},{false,false,false,false,true},{false,false,false,false,true}};
 		//boolean[][] field2={{true,false,false,false,true,true},{true,false,false,false,true,true},{true,false,true,false,true,true},{true,false,false,false,true,true},{true,false,false,false,true,true},{true,false,false,false,true,true}};
-		boolean[][] field2={{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false}};
+		//boolean[][] field2={{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false},{true,false,false,false,true,true,false,false}};
 		//boolean[][] field2 = new boolean[40][40];
 //		System.out.println("Gen 0: ");
 //		System.out.println("==============");
 //		Ex1.printArray(field2);
 //		System.out.println();
-		hSplit = 2;
-		vSplit = 3;
-		nGenerations=4;
-		field = field2;
+//		hSplit = 2;
+//		vSplit = 3;
+//		nGenerations=4;
+		//field = field2;
 		/*
 		UNTIL HERE
 		 */
-		boolean[][][] resultSerial=sGol.invoke(field2,hSplit,vSplit, nGenerations);
+		boolean[][][] resultSerial=sGol.invoke(field,hSplit,vSplit, nGenerations);
 		
 		//printArray(resultSerial);
 		try{
