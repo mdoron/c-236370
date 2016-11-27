@@ -56,7 +56,6 @@ public class LifeConsumer extends Thread {
 					nextBlock[i][j] = false;
 					if (numNeighbors == 3 || (block[i][j] && numNeighbors == 2)) {
 						nextBlock[i][j] = true;
-
 					}
 				}
 			}
@@ -74,7 +73,130 @@ public class LifeConsumer extends Thread {
 
 		}
 	}
+/**
+	public int getValueFromNeighbor(DIR d, int i, int j) throws InterruptedException {
+		if (nqa == null)
+			return 0;
+		if (nqa.get(d.ordinal()) == null) {
+			return 0;
+		}
+		ConcurrentLinkedQueue<Work> q = nqa.get(d.ordinal());
+		if (q == null)
+			return 0;
 
+		Work w = null;
+
+		synchronized (q) {
+			while (q.isEmpty()) {
+				q.wait();
+			}
+			while (w == null) {
+				for (Object w2 : q) {
+					if (genNow == ((Work) w2).getGen() + 1) {
+						w = (Work) w2;
+						break;
+					}
+
+				}
+				if (w == null) {
+					q.wait();
+				}
+			}
+			q.notifyAll();
+		}
+
+		boolean $ = false;
+
+		switch (d) {
+		case UPLEFT:
+			$ = w.getBlock()[w.getBlock().length - 1][w.getBlock()[0].length - 1];
+			break;
+
+		case UPRIGHT:
+			$ = w.getBlock()[w.getBlock().length - 1][0];
+			break;
+
+		case DOWNLEFT:
+			$ = w.getBlock()[0][w.getBlock()[0].length - 1];
+			break;
+			
+		case DOWNRIGHT:
+			$ = w.getBlock()[0][0];
+			break;
+
+		case UP:
+			$ = w.getBlock()[w.getBlock().length - 1][j];
+			break;
+
+		case DOWN:
+			$ = w.getBlock()[0][j];
+			break;
+
+		case LEFT:
+			$ = w.getBlock()[i][w.getBlock()[i].length - 1];
+			break;
+
+		case RIGHT:
+			$ = w.getBlock()[i][0];
+			break;
+
+		default:
+			$ = false;
+			break;
+		}
+		return $ ? 1 : 0;
+	}
+
+	public int getValue(int i, int j) {
+		int val = -1;
+		try {
+			if (i < 0 && j < 0) {
+				val = getValueFromNeighbor(DIR.UPLEFT, i, j);
+			}
+			if (i < 0 && j >= block[0].length) {
+				val = getValueFromNeighbor(DIR.UPRIGHT, i, j);
+			}
+			if (i < 0 && j > 0 && j < block[0].length) {
+				val = getValueFromNeighbor(DIR.UP, i, j);
+			}
+			if (i >= block.length && j < 0) {
+				val = getValueFromNeighbor(DIR.DOWNLEFT, i, j);
+			}
+			if (i >= block.length && j >= block[0].length) {
+				val = getValueFromNeighbor(DIR.DOWNRIGHT, i, j);
+			}
+			if (i >= block.length && j > 0 && j < block[0].length) {
+				val = getValueFromNeighbor(DIR.DOWN, i, j);
+			}
+			if (i > 0 && i < block.length && j < 0) {
+				val = getValueFromNeighbor(DIR.LEFT, i, j);
+			}
+			if (i > 0 && i < block.length && j >= block[0].length) {
+				val = getValueFromNeighbor(DIR.RIGHT, i, j);
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return val;
+	}
+
+	public int numNeighbors2(int x, int y, boolean[][] field) {
+		int counter = (field[x][y] ? -1 : 0);
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				// The position is in our block, no need to talk to neighbors
+				if (i >= 0 && i < field.length && j >= 0 && j < field[0].length) {
+					counter += (field[i][j] ? 1 : 0);
+				} else {
+					counter += getValue(i, j);
+				}
+				continue;
+			}
+		}
+		return counter;
+	}
+**/
 	public enum DIR {
 		UPLEFT, UP, UPRIGHT, LEFT, RIGHT, DOWNLEFT, DOWN, DOWNRIGHT
 	}
@@ -100,81 +222,65 @@ public class LifeConsumer extends Thread {
 			while (q.isEmpty()) {
 				q.wait();
 			}
-			// w = null;//(Work) q.element();
+			
 			while (w == null) {
 				for (Object w2 : q) {
 					if (genNow == ((Work) w2).getGen() + 1) {
 						w = (Work) w2;
 						break;
 					}
-
 				}
 				if (w == null) {
 					q.wait();
 				}
-				/*
-				 * if (genNow > w.getGen()+1) { System.out.println("I'm here");
-				 * q.wait();}
-				 */
-
-	
 			}
 			q.notifyAll();
 		}
-
+		
 		int $ = 0;
 		// assuming all is fine till here, now we take the neighs from block
 		switch (d) {
 		case UPLEFT:
-			return w.getBlock()[w.getBlock().length - 1][w.getBlock()[0].length - 1] ? 1 : 0;
+			$ = w.getBlock()[w.getBlock().length - 1][w.getBlock()[0].length - 1] ? 1 : 0;
+			break;
 
 		case UPRIGHT:
-			return w.getBlock()[w.getBlock().length - 1][0] ? 1 : 0;
+			$ = w.getBlock()[w.getBlock().length - 1][0] ? 1 : 0;
+			break;
+
 		case DOWNLEFT:
-			return w.getBlock()[0][w.getBlock()[0].length - 1] ? 1 : 0;
+			$ = w.getBlock()[0][w.getBlock()[0].length - 1] ? 1 : 0;
+			break;
+
 		case DOWNRIGHT:
-			return w.getBlock()[0][0] ? 1 : 0;
+			$ = w.getBlock()[0][0] ? 1 : 0;
+			break;
+
 		case UP:
-		    return w.getBlock()[w.getBlock().length - 1][j] ? 1 : 0;
-			/*for (int col = 0; col < w.getBlock()[w.getBlock().length - 1].length; col++) {
-				if (col >= j - 1 && col <= j + 1) {
-					$ += w.getBlock()[w.getBlock().length - 1][col] ? 1 : 0;
-				}
-			}
-			return $;*/
+			$ = w.getBlock()[w.getBlock().length - 1][j] ? 1 : 0;
+			break;
+
 		case DOWN:
-            return w.getBlock()[0][j] ? 1 : 0;
-			/*for (int col = 0; col < w.getBlock()[0].length; col++) {
-				if (col >= j - 1 && col <= j + 1) {
-					$ += w.getBlock()[0][col] ? 1 : 0;
-				}
-			}
-			return $;*/
+			$ = w.getBlock()[0][j] ? 1 : 0;
+			break;
+
 		case LEFT:
-            return w.getBlock()[i][w.getBlock()[i].length - 1] ? 1 : 0;
-			/*for (int row = 0; row < w.getBlock().length; row++) {
-				if (row >= i - 1 && row <= i + 1) {
-					$ += w.getBlock()[row][w.getBlock()[row].length - 1] ? 1 : 0;
-				}
-			}
-			return $;*/
+			$ = w.getBlock()[i][w.getBlock()[i].length - 1] ? 1 : 0;
+			break;
+
 		case RIGHT:
-            return w.getBlock()[i][0] ? 1 : 0;
-			/*for (int row = 0; row < w.getBlock().length; row++) {
-				if (row >= i - 1 && row <= i + 1) {
-					$ += w.getBlock()[row][0] ? 1 : 0;
-				}
-			}
-			return $;*/
+			$ = w.getBlock()[i][0] ? 1 : 0;
+			break;
 
 		default:
-			return 0;
+			$ = 0;
+			break;
 		}
+		return $;
 
 	}
 
 	public int numNeighbors(int x, int y, boolean[][] field) {
-		boolean[] flags = { false, false, false, false, false, false, false, false };
 		int counter = (field[x][y] ? -1 : 0);
 		for (int i = x - 1; i <= x + 1; i++) {
 			try {
@@ -183,44 +289,36 @@ public class LifeConsumer extends Thread {
 						counter += (field[i][j] ? 1 : 0);
 						continue;
 					}
-					if (i < 0 && j < 0 && !flags[DIR.UPLEFT.ordinal()]) {
+					if (i < 0 && j < 0) {
 						counter += checkNeigh(DIR.UPLEFT, i, j);
-						//flags[DIR.UPLEFT.ordinal()] = true;
 						continue;
 					}
-					if (i < 0 && j >= field[0].length && !flags[DIR.UPRIGHT.ordinal()]) {
+					if (i < 0 && j >= field[0].length) {
 						counter += checkNeigh(DIR.UPRIGHT, i, j);
-						//flags[DIR.UPRIGHT.ordinal()] = true;
 						continue;
 					}
-					if (i < 0 && j > 0 && j < field[0].length && !flags[DIR.UP.ordinal()]) {
+					if (i < 0 && j >= 0 && j < field[0].length) {
 						counter += checkNeigh(DIR.UP, i, j);
-						//flags[DIR.UP.ordinal()] = true;
 						continue;
 					}
-					if (i >= field.length && j < 0 && !flags[DIR.DOWNLEFT.ordinal()]) {
+					if (i >= field.length && j < 0) {
 						counter += checkNeigh(DIR.DOWNLEFT, i, j);
-						//flags[DIR.DOWNLEFT.ordinal()] = true;
 						continue;
 					}
-					if (i >= field.length && j >= field[0].length && !flags[DIR.DOWNRIGHT.ordinal()]) {
+					if (i >= field.length && j >= field[0].length) {
 						counter += checkNeigh(DIR.DOWNRIGHT, i, j);
-						//flags[DIR.DOWNRIGHT.ordinal()] = true;
 						continue;
 					}
-					if (i >= field.length && j > 0 && j < field[0].length && !flags[DIR.DOWN.ordinal()]) {
+					if (i >= field.length && j >= 0 && j < field[0].length) {
 						counter += checkNeigh(DIR.DOWN, i, j);
-						//flags[DIR.DOWN.ordinal()] = true;
 						continue;
 					}
-					if (i > 0 && i < field.length && j < 0 && !flags[DIR.LEFT.ordinal()]) {
+					if (i >= 0 && i < field.length && j < 0) {
 						counter += checkNeigh(DIR.LEFT, i, j);
-						//flags[DIR.LEFT.ordinal()] = true;
 						continue;
 					}
-					if (i > 0 && i < field.length && j >= field[0].length && !flags[DIR.RIGHT.ordinal()]) {
+					if (i >= 0 && i < field.length && j >= field[0].length) {
 						counter += checkNeigh(DIR.RIGHT, i, j);
-						//flags[DIR.RIGHT.ordinal()] = true;
 						continue;
 					}
 				}
