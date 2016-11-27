@@ -41,20 +41,17 @@ public class ParallelGameOfLife implements GameOfLife {
 		// Calculate size of cells in inside block
 		int rowCellNumber = (int) Math.floorDiv(height, hSplit);
 		int colCellNumber = (int) Math.floorDiv(length, vSplit);
-
+		// If the block is in the last row or column, it might not be in
+		// the same size of the of the previous blocks because modulo !=
+		// 0
+		int lastRowCellNumber = height - rowCellNumber * (hSplit - 1);
+		int lastColCellNumber = height - colCellNumber * (vSplit - 1);
 		// Dividing into sub-tasks. Each thread gets a block and runs it
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
 
-				// If the block is in the last row or column, it might not be in
-				// the same size of the of the previous blocks because modulo !=
-				// 0
-				if (row == hSplit) {
-					rowCellNumber = (int) Math.ceil(((double) height) / hSplit);
-				}
-				if (col == vSplit) {
-					colCellNumber = (int) Math.ceil(((double) length) / vSplit);
-				}
+				rowCellNumber = (int) Math.floorDiv(height, hSplit);
+				colCellNumber = (int) Math.floorDiv(length, vSplit);
 
 				// Initialize array of 8 queues which this block is dependent on
 				// their information
@@ -66,8 +63,17 @@ public class ParallelGameOfLife implements GameOfLife {
 
 				// Initialize MY queue
 				ConcurrentLinkedQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
-				boolean[][] block = extractBlock(input, row * rowCellNumber, col * colCellNumber, rowCellNumber,
-						colCellNumber);
+
+				int rPos = row * rowCellNumber;
+				int cPos = col * colCellNumber;
+				if (row == hSplit - 1) {
+					rowCellNumber = lastRowCellNumber;
+				}
+				if (col == vSplit - 1) {
+					colCellNumber = lastColCellNumber;
+				}
+
+				boolean[][] block = extractBlock(input, rPos, cPos, rowCellNumber, colCellNumber);
 				blocks.add(new Work(block, 0));
 				// Start thread
 
@@ -80,8 +86,11 @@ public class ParallelGameOfLife implements GameOfLife {
 		// state to our queue
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
+				rowCellNumber = (int) Math.ceil(((double) height) / hSplit);
+				colCellNumber = (int) Math.ceil(((double) length) / vSplit);
+
 				Work w = null;
-				while(w==null) {
+				while (w == null) {
 					for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
 						if (generations <= ((Work) w2).getGen()) {
 							w = (Work) w2;
@@ -89,8 +98,8 @@ public class ParallelGameOfLife implements GameOfLife {
 						}
 					}
 				}
-				setBlock(input, w.getBlock(), row * rowCellNumber,
-						col * colCellNumber);
+
+				setBlock(input, w.getBlock(), row * rowCellNumber, col * colCellNumber);
 			}
 		}
 
@@ -147,8 +156,5 @@ public class ParallelGameOfLife implements GameOfLife {
 			}
 		}
 	}
-
-
-
 
 }
