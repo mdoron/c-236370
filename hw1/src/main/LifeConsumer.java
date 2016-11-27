@@ -58,27 +58,16 @@ public class LifeConsumer extends Thread {
 						nextBlock[i][j] = true;
 
 					}
-					/*if(block[i][j]!=nextBlock[i][j]) {
-                        System.out.println("DIFF - " +  block[i][j] + " " + nextBlock[i][j]);
-                    }*/
 				}
 			}
 
-/*            System.out.println("GEN - " + genNow);
-            System.out.println("==========");
-            Ex1.printArray(block);
-            System.out.println("==========");
-            Ex1.printArray(nextBlock);
-            System.out.println("==========");*/
+
 			boolean[][] tmp;
 			tmp = block;
 			block = nextBlock;
             nextBlock = tmp;
 
 			synchronized (blockHistory) {
-                /*System.out.println("WORKING ON THIS FUCKING SHIT:");
-                System.out.println("==========");
-                Ex1.printArray(block);*/
 				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
 											// notify instead

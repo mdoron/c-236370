@@ -80,9 +80,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		// state to our queue
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
-				Work w = null;//
-				// (Work) queuesArray.get(calcIndex(vSplit, row, col)).element();
-				// Work[] warr = (Work[]) q.;
+				Work w = null;
 				while(w==null) {
 					for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
 						if (generations <= ((Work) w2).getGen()) {
@@ -90,21 +88,7 @@ public class ParallelGameOfLife implements GameOfLife {
 							break;
 						}
 					}
-/*					try {
-						queuesArray.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-					0100
-					1001
-					0101
-					0010
-					*/
-
 				}
-				System.out.println("RESULT:");
-				Ex1.printArray(w.getBlock());
 				setBlock(input, w.getBlock(), row * rowCellNumber,
 						col * colCellNumber);
 			}
