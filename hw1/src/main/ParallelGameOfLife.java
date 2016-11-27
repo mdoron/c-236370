@@ -45,7 +45,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		// the same size of the of the previous blocks because modulo !=
 		// 0
 		int lastRowCellNumber = height - rowCellNumber * (hSplit - 1);
-		int lastColCellNumber = height - colCellNumber * (vSplit - 1);
+		int lastColCellNumber = length - colCellNumber * (vSplit - 1);
 		// Dividing into sub-tasks. Each thread gets a block and runs it
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
@@ -72,7 +72,7 @@ public class ParallelGameOfLife implements GameOfLife {
 				if (col == vSplit - 1) {
 					colCellNumber = lastColCellNumber;
 				}
-
+				
 				boolean[][] block = extractBlock(input, rPos, cPos, rowCellNumber, colCellNumber);
 				blocks.add(new Work(block, 0));
 				// Start thread
@@ -140,6 +140,7 @@ public class ParallelGameOfLife implements GameOfLife {
 	}
 
 	public boolean[][] extractBlock(boolean[][] initialField, int x, int y, int lx, int ly) {
+
 		boolean[][] $ = new boolean[lx][ly];
 		for (int i = 0; i < lx; i++) {
 			for (int j = 0; j < ly; j++) {
