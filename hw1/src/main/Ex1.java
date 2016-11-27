@@ -48,7 +48,8 @@ public class Ex1 {
 		/* from this point until the next comment is the init of the small test
 		change field2 to be whatever matrix you want similar to what I did
 		 */
-		boolean[][] field2={{true,false,false,false},{false,true,true,false},{false,true,true,true},{false,false,false,false}};
+		//boolean[][] field2={{true,false,false,false},{false,true,true,false},{false,true,true,true},{false,false,false,false}}; - works
+		boolean[][] field2={{true,false,false,false,true},{false,true,true,false,true},{false,true,true,true,false},{false,false,false,false,true},{false,false,false,false,true}};
 		hSplit = 2;
 		vSplit = 2;
 		nGenerations=2;

@@ -30,7 +30,7 @@ public class LifeConsumer extends Thread {
 		this.block = blockHistory.element().getBlock();
 		this.row = row;
 		this.col = col;
-		this.genNow = 0;
+		this.genNow = 1;
 	}
 
 	public boolean[][] getBlock() {
@@ -46,7 +46,7 @@ public class LifeConsumer extends Thread {
 
 		nextBlock = new boolean[block.length][];
 		// TODO: check when debugging that genNowe has the right values
-		for (genNow = 0; genNow < generations; genNow++) {
+		for (genNow = 1; genNow <= generations; genNow++) {
 			for (int i = 0; i < block.length; i++) {
 				if (nextBlock[i] == null) {
 					nextBlock[i] = new boolean[block[i].length];
@@ -67,7 +67,7 @@ public class LifeConsumer extends Thread {
 			nextBlock = tmp;
 
 			synchronized (blockHistory) {
-				blockHistory.add(new Work(block, genNow + 1));
+				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
 											// notify instead
 			}
@@ -100,19 +100,24 @@ public class LifeConsumer extends Thread {
 			while (q.isEmpty()) {
 				q.wait();
 			}
-			w = (Work) q.element();
-			for (Object w2 : q) {
-				if (genNow <= ((Work) w2).getGen()) {
-					w = (Work) w2;
-					break;
-				}
+			//w = null;//(Work) q.element();
+            while(w==null) {
+                for (Object w2 : q) {
+                    if (genNow == ((Work) w2).getGen() + 1) {
+                        w = (Work) w2;
+                        break;
+                    }
 
-			}
-			if (genNow > w.getGen()) {
-				System.out.println("I'm here");
-				q.wait();
-			}
-			q.notifyAll();
+                }
+                if (w == null) {
+                    q.wait();
+                }
+                /*if (genNow > w.getGen()+1) {
+                    System.out.println("I'm here");
+                    q.wait();}*/
+
+                q.notifyAll();
+            }
 		}
 
 		int $ = 0;
