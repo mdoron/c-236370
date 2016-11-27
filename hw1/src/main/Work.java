@@ -1,5 +1,11 @@
 package main;
 
+/**
+ * 
+ * @author doron
+ * Wrapping class for boolean[][] & int. Holds a block and 
+ * the generation the block was calculated for.
+ */
 public class Work {
 	boolean [][] block;
 	int gen;

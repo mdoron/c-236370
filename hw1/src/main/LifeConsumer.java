@@ -7,8 +7,7 @@ import java.util.Objects;
  * Created by raviv on 16/11/2016.
  */
 /*
- * each consumer holds a queue which has gets the queue of blocks array and the
- * block, the num of generations
+ * LifeConsumer algorithm is placed in the outer documentary
  */
 public class LifeConsumer extends Thread {
 	ArrayList<OurConcurrentQueue<Work>> nqa;
@@ -44,8 +43,10 @@ public class LifeConsumer extends Thread {
 
 	public void run() {
 
+		// initiate the block we work on
 		nextBlock = new boolean[block.length][];
-		// TODO: check when debugging that genNowe has the right values
+		
+		// generations loop - same logic as serial, the difference is in numNeighbors
 		for (genNow = 1; genNow <= generations; genNow++) {
 			for (int i = 0; i < block.length; i++) {
 				if (nextBlock[i] == null) {
@@ -65,6 +66,7 @@ public class LifeConsumer extends Thread {
 			block = nextBlock;
 			nextBlock = tmp;
 
+			// finally, we add the calculated block to our queue, meaning the blockHistory, and notify all
 			synchronized (blockHistory) {
 				blockHistory.add(new Work(block, genNow));
 				blockHistory.notifyAll(); // notify producer maybe we should do
@@ -73,156 +75,37 @@ public class LifeConsumer extends Thread {
 
 		}
 	}
-/**
-	public int getValueFromNeighbor(DIR d, int i, int j) throws InterruptedException {
-		if (nqa == null)
-			return 0;
-		if (nqa.get(d.ordinal()) == null) {
-			return 0;
-		}
-		OurConcurrentQueue<Work> q = nqa.get(d.ordinal());
-		if (q == null)
-			return 0;
-
-		Work w = null;
-
-		synchronized (q) {
-			while (q.isEmpty()) {
-				q.wait();
-			}
-			while (w == null) {
-				for (Object w2 : q) {
-					if (genNow == ((Work) w2).getGen() + 1) {
-						w = (Work) w2;
-						break;
-					}
-
-				}
-				if (w == null) {
-					q.wait();
-				}
-			}
-			q.notifyAll();
-		}
-
-		boolean $ = false;
-
-		switch (d) {
-		case UPLEFT:
-			$ = w.getBlock()[w.getBlock().length - 1][w.getBlock()[0].length - 1];
-			break;
-
-		case UPRIGHT:
-			$ = w.getBlock()[w.getBlock().length - 1][0];
-			break;
-
-		case DOWNLEFT:
-			$ = w.getBlock()[0][w.getBlock()[0].length - 1];
-			break;
-			
-		case DOWNRIGHT:
-			$ = w.getBlock()[0][0];
-			break;
-
-		case UP:
-			$ = w.getBlock()[w.getBlock().length - 1][j];
-			break;
-
-		case DOWN:
-			$ = w.getBlock()[0][j];
-			break;
-
-		case LEFT:
-			$ = w.getBlock()[i][w.getBlock()[i].length - 1];
-			break;
-
-		case RIGHT:
-			$ = w.getBlock()[i][0];
-			break;
-
-		default:
-			$ = false;
-			break;
-		}
-		return $ ? 1 : 0;
-	}
-
-	public int getValue(int i, int j) {
-		int val = -1;
-		try {
-			if (i < 0 && j < 0) {
-				val = getValueFromNeighbor(DIR.UPLEFT, i, j);
-			}
-			if (i < 0 && j >= block[0].length) {
-				val = getValueFromNeighbor(DIR.UPRIGHT, i, j);
-			}
-			if (i < 0 && j > 0 && j < block[0].length) {
-				val = getValueFromNeighbor(DIR.UP, i, j);
-			}
-			if (i >= block.length && j < 0) {
-				val = getValueFromNeighbor(DIR.DOWNLEFT, i, j);
-			}
-			if (i >= block.length && j >= block[0].length) {
-				val = getValueFromNeighbor(DIR.DOWNRIGHT, i, j);
-			}
-			if (i >= block.length && j > 0 && j < block[0].length) {
-				val = getValueFromNeighbor(DIR.DOWN, i, j);
-			}
-			if (i > 0 && i < block.length && j < 0) {
-				val = getValueFromNeighbor(DIR.LEFT, i, j);
-			}
-			if (i > 0 && i < block.length && j >= block[0].length) {
-				val = getValueFromNeighbor(DIR.RIGHT, i, j);
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return val;
-	}
-
-	public int numNeighbors2(int x, int y, boolean[][] field) {
-		int counter = (field[x][y] ? -1 : 0);
-		for (int i = x - 1; i <= x + 1; i++) {
-			for (int j = y - 1; j <= y + 1; j++) {
-				// The position is in our block, no need to talk to neighbors
-				if (i >= 0 && i < field.length && j >= 0 && j < field[0].length) {
-					counter += (field[i][j] ? 1 : 0);
-				} else {
-					counter += getValue(i, j);
-				}
-				continue;
-			}
-		}
-		return counter;
-	}
-**/
 	public enum DIR {
 		UPLEFT, UP, UPRIGHT, LEFT, RIGHT, DOWNLEFT, DOWN, DOWNRIGHT
 	}
 
 	/*
 	 * @param d - the direction in which the overflow was in
-	 * 
 	 * @return - sum of neighbours from the overflowed block which are alive
 	 */
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
+		
+		// Part A - its purpose is to take over q and w. 
 		if (nqa == null)
 			return 0;
 		if (nqa.get(d.ordinal()) == null) {
 			return 0;
 		}
+		// we get the reference for q (by java implementation (OOP), doesn't need to be synchronized)
+		// q is the right q that we need to take the value from it
 		OurConcurrentQueue<Work> q = nqa.get(d.ordinal());
 		if (q == null)
 			return 0;
 
 		Work w = null;
 
+		// q is shared and other may need it, so we have to synchronize
 		synchronized (q) {
 			while (q.isEmpty()) {
 				q.wait();
 			}
 			
+			// waiting that our neighbors and neighbors only will reach our generation so we can work on the next one
 			while (w == null) {
                 for(int ii=0;ii<q.size();ii++) {
                     Object w2 = q.get(ii);
@@ -238,8 +121,12 @@ public class LifeConsumer extends Thread {
 			q.notifyAll();
 		}
 		
+		
+		// Part B - getting the value from the right queue.
+		// because of d, we know the orientation of the neighbor block,
+		// and because of i, j we know the exact cell we want from the neighbor block
 		int $ = 0;
-		// assuming all is fine till here, now we take the neighs from block
+		
 		switch (d) {
 		case UPLEFT:
 			$ = w.getBlock()[w.getBlock().length - 1][w.getBlock()[0].length - 1] ? 1 : 0;
@@ -281,15 +168,24 @@ public class LifeConsumer extends Thread {
 
 	}
 
+	/**
+	 * Calculates the number of alive neighbors of a cell.
+	 * @param x position of cell
+	 * @param y position of cell
+	 * @param field current that we work on
+	 * @return number of alive neighbors
+	 */
 	public int numNeighbors(int x, int y, boolean[][] field) {
 		int counter = (field[x][y] ? -1 : 0);
 		for (int i = x - 1; i <= x + 1; i++) {
 			try {
 				for (int j = y - 1; j <= y + 1; j++) {
+					// if the neighbor cell is in our block, no need to talk to strangers...
 					if (i >= 0 && i < field.length && j >= 0 && j < field[0].length) {
 						counter += (field[i][j] ? 1 : 0);
 						continue;
 					}
+					// calculating the orientation of the cell neighbor, which block is it in?
 					if (i < 0 && j < 0) {
 						counter += checkNeigh(DIR.UPLEFT, i, j);
 						continue;

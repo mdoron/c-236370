@@ -21,7 +21,6 @@ public class ParallelGameOfLife implements GameOfLife {
 		int length = initialField[0].length;
 
 		// Local field initialization
-		// TODO: Nice-to-Have: parallelize this @mdoron @ravivos
 		boolean[][] input = new boolean[initialField.length][];
 		for (int i = 0; i < initialField.length; i++) {
 			input[i] = new boolean[initialField[0].length];
@@ -40,11 +39,13 @@ public class ParallelGameOfLife implements GameOfLife {
 		// Calculate size of cells in inside block
 		int rowCellNumber = (int) Math.floorDiv(height, hSplit);
 		int colCellNumber = (int) Math.floorDiv(length, vSplit);
+		
 		// If the block is in the last row or column, it might not be in
 		// the same size of the of the previous blocks because modulo !=
-		// 0
+		// 0. So, we have to calculate the blocks of the last row/column separately
 		int lastRowCellNumber = height - rowCellNumber * (hSplit - 1);
 		int lastColCellNumber = length - colCellNumber * (vSplit - 1);
+		
 		// Dividing into sub-tasks. Each thread gets a block and runs it
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
@@ -56,6 +57,8 @@ public class ParallelGameOfLife implements GameOfLife {
 				// their information
 				ArrayList<OurConcurrentQueue<Work>> nqa = new ArrayList<OurConcurrentQueue<Work>>();
 
+				// queuesArray should be synchronized because in the next runs other
+				// thread might use it. Mainly we do it just to be sure
 				synchronized (queuesArray) {
 					setNQA(queuesArray, nqa, row, col, hSplit, vSplit);
 				}
@@ -63,6 +66,7 @@ public class ParallelGameOfLife implements GameOfLife {
 				// Initialize MY queue
 				OurConcurrentQueue<Work> blocks = queuesArray.get(calcIndex(vSplit, row, col));
 
+				// The position of the row and column in the big array
 				int rPos = row * rowCellNumber;
 				int cPos = col * colCellNumber;
 				if (row == hSplit - 1) {
@@ -72,16 +76,20 @@ public class ParallelGameOfLife implements GameOfLife {
 					colCellNumber = lastColCellNumber;
 				}
 				
+				// block holds a chunk of input. 
+				// MATLAB syntax: block = input(rPos:rPos+rowCellNumber, cPos:cPos+colCellNumber)
 				boolean[][] block = extractBlock(input, rPos, cPos, rowCellNumber, colCellNumber);
+				
+				// adding block as initial state to MY queue
 				blocks.add(new Work(block, 0));
-				// Start thread
 
+				// Start thread. blocks is a shared resource and must be synchronized
 				synchronized (blocks) {
 					new LifeConsumer(nqa, blocks, generations, row, col).start();
 				}
 			}
 		}
-		// Combine all information into input.
+		// Combine all information into input after everyone have finished.
 		// state to our queue
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
@@ -98,6 +106,7 @@ public class ParallelGameOfLife implements GameOfLife {
 						}
 					}
 				}
+				// sets block into its right position in input
 				setBlock(input, w.getBlock(), row * rowCellNumber, col * colCellNumber);
 			}
 		}
@@ -105,6 +114,15 @@ public class ParallelGameOfLife implements GameOfLife {
 		return input;
 	}
 
+	/**
+	 * Set the neighbors queue array to the right values
+	 * @param queuesArray each block has a queue. queuesArray holds all of them.
+	 * @param nqa this is our nqa, we insert references of neighbor blocks to it
+	 * @param row position of this block
+	 * @param col position of this block 
+	 * @param hSplit number of horizontal splits
+	 * @param vSplit number of vertical splits
+	 */
 	public void setNQA(ArrayList<OurConcurrentQueue<Work>> queuesArray, ArrayList<OurConcurrentQueue<Work>> nqa,
 			int row, int col, int hSplit, int vSplit) {
 
@@ -119,8 +137,7 @@ public class ParallelGameOfLife implements GameOfLife {
 	}
 
 	/**
-	 * 
-	 * @return the right queue or null
+	 * @return the right neighbor queue or null
 	 */
 	public OurConcurrentQueue<Work> getQueue(ArrayList<OurConcurrentQueue<Work>> queuesArray, int hSplit,
 			int vSplit, int row, int col) {
