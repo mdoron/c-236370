@@ -11,7 +11,7 @@ public class ParallelGameOfLife implements GameOfLife {
 		boolean[][][] x = new boolean[2][][];
 		// TODO: improve this to be only one
 		x[0] = get_gen(initalField, hSplit, vSplit, generations - 1);
-		x[1] = get_gen(x[0], hSplit, vSplit, 1);
+		x[1] = (new SerialGameOfLife()).get_gen(x[0], hSplit, vSplit, 1);
 		return x;
 	}
 
@@ -80,13 +80,27 @@ public class ParallelGameOfLife implements GameOfLife {
 		// state to our queue
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
-				Work w = (Work) queuesArray.get(calcIndex(vSplit, row, col)).element();
+				Work w = null;//
+				// (Work) queuesArray.get(calcIndex(vSplit, row, col)).element();
 				// Work[] warr = (Work[]) q.;
-				for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
-					if (generations <= ((Work) w2).getGen()) {
-						w = (Work) w2;
-						break;
+				while(w==null) {
+					for (Object w2 : queuesArray.get(calcIndex(vSplit, row, col))) {
+						if (generations <= ((Work) w2).getGen()) {
+							w = (Work) w2;
+							break;
+						}
 					}
+/*					try {
+						queuesArray.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					0100
+					1001
+					0101
+					0010
+					*/
 
 				}
 				System.out.println("RESULT:");
@@ -149,4 +163,8 @@ public class ParallelGameOfLife implements GameOfLife {
 			}
 		}
 	}
+
+
+
+
 }
