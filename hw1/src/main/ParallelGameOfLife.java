@@ -2,6 +2,7 @@ package main;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.SynchronousQueue;
 
 public class ParallelGameOfLife implements GameOfLife {
 
@@ -88,6 +89,11 @@ public class ParallelGameOfLife implements GameOfLife {
 							break;
 						}
 					}
+				}
+				synchronized (System.out) {
+					Ex1.printArray(w.getBlock());
+					System.out.println();
+					System.out.println();
 				}
 				setBlock(input, w.getBlock(), row * rowCellNumber,
 						col * colCellNumber);

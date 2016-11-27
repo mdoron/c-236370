@@ -133,33 +133,37 @@ public class LifeConsumer extends Thread {
 		case DOWNRIGHT:
 			return w.getBlock()[0][0] ? 1 : 0;
 		case UP:
-			for (int col = 0; col < w.getBlock()[w.getBlock().length - 1].length; col++) {
+		    return w.getBlock()[w.getBlock().length - 1][j] ? 1 : 0;
+			/*for (int col = 0; col < w.getBlock()[w.getBlock().length - 1].length; col++) {
 				if (col >= j - 1 && col <= j + 1) {
 					$ += w.getBlock()[w.getBlock().length - 1][col] ? 1 : 0;
 				}
 			}
-			return $;
+			return $;*/
 		case DOWN:
-			for (int col = 0; col < w.getBlock()[0].length; col++) {
+            return w.getBlock()[0][j] ? 1 : 0;
+			/*for (int col = 0; col < w.getBlock()[0].length; col++) {
 				if (col >= j - 1 && col <= j + 1) {
 					$ += w.getBlock()[0][col] ? 1 : 0;
 				}
 			}
-			return $;
+			return $;*/
 		case LEFT:
-			for (int row = 0; row < w.getBlock().length; row++) {
+            return w.getBlock()[i][w.getBlock()[i].length - 1] ? 1 : 0;
+			/*for (int row = 0; row < w.getBlock().length; row++) {
 				if (row >= i - 1 && row <= i + 1) {
 					$ += w.getBlock()[row][w.getBlock()[row].length - 1] ? 1 : 0;
 				}
 			}
-			return $;
+			return $;*/
 		case RIGHT:
-			for (int row = 0; row < w.getBlock().length; row++) {
+            return w.getBlock()[i][0] ? 1 : 0;
+			/*for (int row = 0; row < w.getBlock().length; row++) {
 				if (row >= i - 1 && row <= i + 1) {
 					$ += w.getBlock()[row][0] ? 1 : 0;
 				}
 			}
-			return $;
+			return $;*/
 
 		default:
 			return 0;
@@ -179,42 +183,42 @@ public class LifeConsumer extends Thread {
 					}
 					if (i < 0 && j < 0 && !flags[DIR.UPLEFT.ordinal()]) {
 						counter += checkNeigh(DIR.UPLEFT, i, j);
-						flags[DIR.UPLEFT.ordinal()] = true;
+						//flags[DIR.UPLEFT.ordinal()] = true;
 						continue;
 					}
 					if (i < 0 && j >= field[0].length && !flags[DIR.UPRIGHT.ordinal()]) {
 						counter += checkNeigh(DIR.UPRIGHT, i, j);
-						flags[DIR.UPRIGHT.ordinal()] = true;
+						//flags[DIR.UPRIGHT.ordinal()] = true;
 						continue;
 					}
 					if (i < 0 && j > 0 && j < field[0].length && !flags[DIR.UP.ordinal()]) {
 						counter += checkNeigh(DIR.UP, i, j);
-						flags[DIR.UP.ordinal()] = true;
+						//flags[DIR.UP.ordinal()] = true;
 						continue;
 					}
 					if (i >= field.length && j < 0 && !flags[DIR.DOWNLEFT.ordinal()]) {
 						counter += checkNeigh(DIR.DOWNLEFT, i, j);
-						flags[DIR.DOWNLEFT.ordinal()] = true;
+						//flags[DIR.DOWNLEFT.ordinal()] = true;
 						continue;
 					}
 					if (i >= field.length && j >= field[0].length && !flags[DIR.DOWNRIGHT.ordinal()]) {
 						counter += checkNeigh(DIR.DOWNRIGHT, i, j);
-						flags[DIR.DOWNRIGHT.ordinal()] = true;
+						//flags[DIR.DOWNRIGHT.ordinal()] = true;
 						continue;
 					}
 					if (i >= field.length && j > 0 && j < field[0].length && !flags[DIR.DOWN.ordinal()]) {
 						counter += checkNeigh(DIR.DOWN, i, j);
-						flags[DIR.DOWN.ordinal()] = true;
+						//flags[DIR.DOWN.ordinal()] = true;
 						continue;
 					}
 					if (i > 0 && i < field.length && j < 0 && !flags[DIR.LEFT.ordinal()]) {
 						counter += checkNeigh(DIR.LEFT, i, j);
-						flags[DIR.LEFT.ordinal()] = true;
+						//flags[DIR.LEFT.ordinal()] = true;
 						continue;
 					}
 					if (i > 0 && i < field.length && j >= field[0].length && !flags[DIR.RIGHT.ordinal()]) {
 						counter += checkNeigh(DIR.RIGHT, i, j);
-						flags[DIR.RIGHT.ordinal()] = true;
+						//flags[DIR.RIGHT.ordinal()] = true;
 						continue;
 					}
 				}
