@@ -86,8 +86,8 @@ public class ParallelGameOfLife implements GameOfLife {
 		// state to our queue
 		for (int row = 0; row < hSplit; row++) {
 			for (int col = 0; col < vSplit; col++) {
-				rowCellNumber = (int) Math.ceil(((double) height) / hSplit);
-				colCellNumber = (int) Math.ceil(((double) length) / vSplit);
+				rowCellNumber = (int) Math.floorDiv(height, hSplit);
+				colCellNumber = (int) Math.floorDiv(length, vSplit);
 
 				Work w = null;
 				while (w == null) {
