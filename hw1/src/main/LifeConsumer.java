@@ -30,6 +30,7 @@ public class LifeConsumer extends Thread {
 		this.block = blockHistory.element().getBlock();
 		this.row = row;
 		this.col = col;
+		this.genNow = 0;
 	}
 
 	public boolean[][] getBlock() {
@@ -44,9 +45,8 @@ public class LifeConsumer extends Thread {
 	public void run() {
 
 		nextBlock = new boolean[block.length][];
-		genNow = 1;
 		// TODO: check when debugging that genNowe has the right values
-		for (genNow = 1; genNow <= generations; genNow++) {
+		for (genNow = 0; genNow < generations; genNow++) {
 			for (int i = 0; i < block.length; i++) {
 				if (nextBlock[i] == null) {
 					nextBlock[i] = new boolean[block[i].length];
@@ -61,14 +61,13 @@ public class LifeConsumer extends Thread {
 				}
 			}
 
-
 			boolean[][] tmp;
 			tmp = block;
 			block = nextBlock;
-            nextBlock = tmp;
+			nextBlock = tmp;
 
 			synchronized (blockHistory) {
-				blockHistory.add(new Work(block, genNow));
+				blockHistory.add(new Work(block, genNow + 1));
 				blockHistory.notifyAll(); // notify producer maybe we should do
 											// notify instead
 			}
@@ -86,39 +85,36 @@ public class LifeConsumer extends Thread {
 	 * @return - sum of neighbours from the overflowed block which are alive
 	 */
 	public int checkNeigh(DIR d, int i, int j) throws InterruptedException {
-		ConcurrentLinkedQueue<Work> q;
-		synchronized (nqa) {
-            if(nqa == null)
-                return 0;
-            if(nqa.get(d.ordinal())==null) {
-                return 0;
-            }
-            q = new ConcurrentLinkedQueue<Work>(nqa.get(d.ordinal()));
-            if (q == null)
-                return 0;
-            while (q.isEmpty()) {
-				nqa.wait();
-				q = new ConcurrentLinkedQueue<Work>(nqa.get(d.ordinal()));
+		if (nqa == null)
+			return 0;
+		if (nqa.get(d.ordinal()) == null) {
+			return 0;
+		}
+		ConcurrentLinkedQueue<Work> q = nqa.get(d.ordinal());
+		if (q == null)
+			return 0;
+
+		Work w = null;
+
+		synchronized (q) {
+			while (q.isEmpty()) {
+				q.wait();
 			}
-			nqa.notifyAll();
-		}
+			w = (Work) q.element();
+			for (Object w2 : q) {
+				if (genNow <= ((Work) w2).getGen()) {
+					w = (Work) w2;
+					break;
+				}
 
-
-		while (q.isEmpty()) {
-			q.wait();
-		}
-		Work w = (Work) q.element();
-		// Work[] warr = (Work[]) q.;
-		for (Object w2 : q) {
-			if (genNow <= ((Work) w2).getGen()) {
-				w = (Work) w2;
-				break;
 			}
-
+			if (genNow > w.getGen()) {
+				System.out.println("I'm here");
+				q.wait();
+			}
+			q.notifyAll();
 		}
-//		if (genNow > w.getGen()) {
-//			q.wait();
-//		}
+
 		int $ = 0;
 		// assuming all is fine till here, now we take the neighs from block
 		switch (d) {
@@ -148,7 +144,7 @@ public class LifeConsumer extends Thread {
 		case LEFT:
 			for (int row = 0; row < w.getBlock().length; row++) {
 				if (row >= i - 1 && row <= i + 1) {
-					$ += w.getBlock()[row][w.getBlock()[row].length-1] ? 1 : 0;
+					$ += w.getBlock()[row][w.getBlock()[row].length - 1] ? 1 : 0;
 				}
 			}
 			return $;
