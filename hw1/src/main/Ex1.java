@@ -49,8 +49,8 @@ public class Ex1 {
 		change field2 to be whatever matrix you want similar to what I did
 		 */
 		//boolean[][] field2={{true,false,false,false},{false,true,true,false},{false,true,true,true},{false,false,false,false}}; - works
-		boolean[][] field2={{true,false,false,false,true},{false,true,true,false,true},{false,true,true,true,false},{false,false,false,false,true},{false,false,false,false,true}};
-		hSplit = 2;
+		boolean[][] field2={{true,false,false,false,false,true}, {true,false,false,false,false,true},{false,true,true,false,true,false},{false,true,true,true,true,false},{false,false,false,false,true,false},{false,false,false,false,true,false}};
+		hSplit = 4;
 		vSplit = 2;
 		nGenerations=2;
 		field = field2;
@@ -76,15 +76,15 @@ public class Ex1 {
 		System.out.println("");
 		printArray(resultSerial[0]);
 		System.out.println("");
-		System.out.println("Serial 1:");
-		System.out.println("==============");
-		System.out.println("");
-		printArray(resultSerial[1]);
-		System.out.println("");
 		System.out.println("parallel 0:");
 		System.out.println("==============");
 		System.out.println("");
 		printArray(resultParallel[0]);
+		System.out.println("");
+		System.out.println("Serial 1:");
+		System.out.println("==============");
+		System.out.println("");
+		printArray(resultSerial[1]);
 		System.out.println("");
 		System.out.println("parallel 1:");
 		System.out.println("==============");

@@ -100,24 +100,26 @@ public class LifeConsumer extends Thread {
 			while (q.isEmpty()) {
 				q.wait();
 			}
-			//w = null;//(Work) q.element();
-            while(w==null) {
-                for (Object w2 : q) {
-                    if (genNow == ((Work) w2).getGen() + 1) {
-                        w = (Work) w2;
-                        break;
-                    }
+			// w = null;//(Work) q.element();
+			while (w == null) {
+				for (Object w2 : q) {
+					if (genNow == ((Work) w2).getGen() + 1) {
+						w = (Work) w2;
+						break;
+					}
 
-                }
-                if (w == null) {
-                    q.wait();
-                }
-                /*if (genNow > w.getGen()+1) {
-                    System.out.println("I'm here");
-                    q.wait();}*/
+				}
+				if (w == null) {
+					q.wait();
+				}
+				/*
+				 * if (genNow > w.getGen()+1) { System.out.println("I'm here");
+				 * q.wait();}
+				 */
 
-                q.notifyAll();
-            }
+	
+			}
+			q.notifyAll();
 		}
 
 		int $ = 0;
