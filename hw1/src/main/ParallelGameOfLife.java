@@ -98,11 +98,6 @@ public class ParallelGameOfLife implements GameOfLife {
 						}
 					}
 				}
-				synchronized (System.out) {
-                    System.out.println();
-                    System.out.println();
-                    Ex1.printArray(w.getBlock());
-                }
 				setBlock(input, w.getBlock(), row * rowCellNumber, col * colCellNumber);
 			}
 		}
