@@ -16,8 +16,13 @@ void printVec(int* v, int vSize) {
 }
 
 void copyVector(int* v, int* u, int vSize) {
-	for (int i=0; i<vSize; i++) {
-		v[i] = u[i];
+	#pragma omp parallel
+	{
+		#pragma omp for
+		for (int i=0; i<vSize; i++) {
+			v[i] = u[i];
+		}
+		#pragma omp barrier
 	}
 }
 // u = H*v
@@ -38,7 +43,7 @@ void fast_parallel_walsh(int* v, int vSize) {
 				}
 			}
 		}
-		copyVector(v, u);
+		copyVector(v, u, vSize);
 	}
 }
 
@@ -49,12 +54,7 @@ void simple_parallel_walsh(int* v, int vSize) {
 		create_walsh_vector(h, vSize, colNum);
 		u[colNum] = multiply(h, v, vSize);
 	}
-	#pragma omp parallel
-	{
-		#pragma omp for
-		copyVector(v, u);
-		#pragma omp barrier
-	}
+	copyVector(v, u, vSize);
 }
 
 // Precondition: length(x) == length(y) == size
