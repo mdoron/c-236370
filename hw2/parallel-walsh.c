@@ -17,7 +17,16 @@ void printVec(int* v, int vSize) {
 // u = H*v
 
 void fast_parallel_walsh(int* v, int vSize) {
-
+	int u[vSize];
+	
+	for (int i=1; i<=log(vSize); i++) {
+		int divid = pow(2, i);
+		for(int k=0; k<divid; k++) {
+			for (int j=0; j<vSize/divid; j++) {
+				u[j+k*vSize/divid] = ??;
+			}
+		}
+	}
 }
 
 void simple_parallel_walsh(int* v, int vSize) {
