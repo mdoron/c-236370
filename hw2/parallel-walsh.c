@@ -14,18 +14,31 @@ void printVec(int* v, int vSize) {
 		printf("%d\n", v[i]);
 	}
 }
+
+void copyVector(int* v, int* u, int vSize) {
+	for (int i=0; i<vSize; i++) {
+		v[i] = u[i];
+	}
+}
 // u = H*v
 
 void fast_parallel_walsh(int* v, int vSize) {
 	int u[vSize];
-	
+
 	for (int i=1; i<=log(vSize); i++) {
 		int divid = pow(2, i);
 		for(int k=0; k<divid; k++) {
-			for (int j=0; j<vSize/divid; j++) {
-				u[j+k*vSize/divid] = ??;
+			if (k % 2 == 0) {
+				for (int j=0; j<vSize/divid; j++) {
+					u[j+k*vSize/divid] = v[j+k*vSize/divid] + v[j+(k+1)*vSize/divid];
+				}
+			} else {
+				for (int j=0; j<vSize/divid; j++) {
+					u[j+k*vSize/divid] = - v[j+k*vSize/divid] + v[j+(k-1)*vSize/divid];
+				}
 			}
 		}
+		copyVector(v, u);
 	}
 }
 
@@ -39,9 +52,7 @@ void simple_parallel_walsh(int* v, int vSize) {
 	#pragma omp parallel
 	{
 		#pragma omp for
-		for (int i=0; i<vSize; i++) {
-			v[i] = u[i];
-		}
+		copyVector(v, u);
 		#pragma omp barrier
 	}
 }
