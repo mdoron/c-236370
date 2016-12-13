@@ -68,16 +68,16 @@ void testmultiply2() {
 
 
  void	testSimple_parallel_walsh() {
- 		int v[8] = {1, 2, 3, 4};
- 		simple_parallel_walsh(v, 4);
- 		printVec(v, 4);
+ 		int v[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+ 		simple_parallel_walsh(v, 8);
+ 		printVec(v, 8);
 		return;
 	}
 
 void test_fast_parallel_walsh() {
-	int v[4] = {1, 2, 3, 4};
-	fast_parallel_walsh(v, 4);
-	printVec(v, 4);
+	int v[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+	fast_parallel_walsh(v, 8);
+	printVec(v, 8);
 	return;
 }
 

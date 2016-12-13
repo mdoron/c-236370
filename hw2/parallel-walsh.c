@@ -29,8 +29,8 @@ void copyVector(int* v, int* u, int vSize) {
 
 void fast_parallel_walsh(int* v, int vSize) {
 	int u[vSize];
-
-	for (int i=1; i<=log(vSize); i++) {
+	printf("log(vSize) = %f\n", log(vSize)/log(2));
+	for (int i=1; i<=log(vSize)/log(2); i++) {
 		int divid = pow(2, i);
 		for(int k=0; k<divid; k++) {
 			if (k % 2 == 0) {
