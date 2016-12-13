@@ -67,12 +67,19 @@ void testmultiply2() {
 
 
 
- void	testSimple_parallel_walsh2() {
+ void	testSimple_parallel_walsh() {
  		int v[4] = {1, 2, 3, 4};
  		simple_parallel_walsh(v, 4);
  		printVec(v, 4);
 		return;
 	}
+
+void test_fast_parallel_walsh() {
+	int v[4] = {1, 2, 3, 4};
+	simple_parallel_walsh(v, 4);
+	printVec(v, 4);
+	return;
+}
 
 
 
@@ -85,6 +92,7 @@ int main() {
 	testCreate_walsh_vector();
 	testCreate_walsh_vector2();
 	testCreate_walsh_vector3();
-	testSimple_parallel_walsh2();
+	testSimple_parallel_walsh();
+	test_fast_parallel_walsh();
 	printf("SUCCESS!!\n");
 }
