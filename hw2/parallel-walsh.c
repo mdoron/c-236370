@@ -27,9 +27,8 @@ void copyVector(int* v, int* u, int vSize) {
 }
 // u = H*v
 
-void fast_parallel_walsh(int* v, int vSize) {
+void fast_parallel_walsh2(int* v, int vSize) {
 	int u[vSize];
-	printf("log(vSize) = %f\n", log(vSize)/log(2));
 	for (int i=1; i<=log(vSize)/log(2); i++) {
 		int divid = pow(2, i);
 		for(int k=0; k<divid; k++) {
@@ -44,6 +43,20 @@ void fast_parallel_walsh(int* v, int vSize) {
 			}
 		}
 		copyVector(v, u, vSize);
+	}
+}
+
+void fast_parallel_walsh(int* v, int vSize) {
+	int itNum = log(vSize)/log(2);
+	for (int i=0; i<itNum; i++) {
+		int divid = pow(2, i);
+		for(int k=0; k<divid; k++) {
+			for (int j=0; j<vSize/(2*divid); j++) {
+				int temp = v[(int)(j+vSize/(2*divid)+k*pow(2, itNum-i))];
+				v[(int)(j+vSize/(2*divid)+k*pow(2, itNum-i))] = v[(int)(j+pow(2, itNum-i)*k)] - temp; 
+				v[(int)(j+pow(2, itNum-i)*k)] += temp;
+			}
+		}
 	}
 }
 
