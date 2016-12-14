@@ -47,15 +47,36 @@ void fast_parallel_walsh2(int* v, int vSize) {
 }
 
 void fast_parallel_walsh(int* v, int vSize) {
-	int itNum = log(vSize)/log(2);
-	for (int i=0; i<itNum; i++) {
-		int divid = pow(2, i);
-		for(int k=0; k<divid; k++) {
-			for (int j=0; j<vSize/(2*divid); j++) {
-				int temp = v[(int)(j+vSize/(2*divid)+k*pow(2, itNum-i))];
-				v[(int)(j+vSize/(2*divid)+k*pow(2, itNum-i))] = v[(int)(j+pow(2, itNum-i)*k)] - temp; 
-				v[(int)(j+pow(2, itNum-i)*k)] += temp;
+	#pragma omp parallel
+	{
+		register int base_size = vSize;
+		register int len = base_size >> 1;
+
+
+        #pragma omp for schedule(static)
+		for (register int j=0; j<len; ++j) {
+			register int temp = v[j+len];
+			v[j+len] = v[j] - temp; 
+			v[j] += temp;
+		}
+        base_size >>= 1;
+		len >>= 1;
+
+		for (register int itr=2; itr!=vSize; itr <<= 1) {
+
+			#pragma omp for schedule(static)
+			for(register int k=0; k<itr; ++k) {
+
+				register int base_pos = k*base_size;
+
+				for (register int j=base_pos; j<base_pos+len; ++j) {
+					register int temp = v[j+len];
+					v[j+len] = v[j] - temp; 
+					v[j] += temp;
+				}
 			}
+			base_size >>= 1;
+			len >>= 1;
 		}
 	}
 }
