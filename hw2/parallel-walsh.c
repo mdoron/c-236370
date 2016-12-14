@@ -82,8 +82,8 @@ void fast_parallel_walsh(int* v, int vSize) {
 }
 
 void simple_parallel_walsh(int* v, int vSize) {
-	int u[vSize];
-	int h[vSize];
+	int* u = malloc(sizeof(int)*vSize);
+	int* h = malloc(sizeof(int)*vSize);
 	for(int colNum = 0; colNum < vSize; colNum++) {
 		create_walsh_vector(h, vSize, colNum);
 		u[colNum] = multiply(h, v, vSize);
