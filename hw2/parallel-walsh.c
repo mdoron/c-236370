@@ -1,10 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
 #include <math.h>
 
-
-
+/**
+ * Declerations
+ **/
 void create_walsh_vector(int* h, int vSize, int colNum);
 int multiply(int* x, int* y, int size);
 
