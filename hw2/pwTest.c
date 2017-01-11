@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 
-// USAGE - gcc -fopenmp -g -lgomp -lm -std=c99 -m64 pwTest.c  
+// USAGE - gcc -fopenmp -g -lgomp  -std=c99 -m64 pwTest.c   -lm
 
 void testmultiply1() {
 	int x[3];
@@ -24,12 +24,14 @@ void testmultiply2() {
 	assert (a == 32);
 }
 
-
+ // Ignore
  void testNumberOfBits() {
 		//TODO - @mdoron
 		return;
 	}
 
+
+ // Ignore
  void	testNumberOfBits2() {
 		//TODO - @mdoron
 		return;
@@ -37,24 +39,57 @@ void testmultiply2() {
 
 
  void testCreate_walsh_vector() {
-		//TODO - @mdoron
+ 		int h[4] = {0};
+		create_walsh_vector(h, 4, 0);
+		for (int i=0; i< 4; i++) {
+			assert(h[i] == 1);
+		};
 		return;
 	}
 
  void	testCreate_walsh_vector2() {
-		//TODO - @mdoron
+ 		int h[16] = {0};
+		create_walsh_vector(h, 16, 0);
+		for (int i=0; i< 16; i++) {
+			assert(h[i] == 1);
+		};
 		return;
 	}
+
+ void	testCreate_walsh_vector3() {
+ 		int h[16] = {0};
+		create_walsh_vector(h, 16, 0);
+		for (int i=0; i< 16; i++) {
+			assert(h[i] == 1);
+		}
+		return;
+	}
+
+
 
  void	testSimple_parallel_walsh() {
-		//TODO - @mdoron
+ 		int v[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+ 		simple_parallel_walsh(v, 8);
+ 		// printVec(v, 8);
 		return;
 	}
 
- void	testSimple_parallel_walsh2() {
-		//TODO - @mdoron
-		return;
-	}
+void test_fast_parallel_walsh() {
+	printf("=========\nFast1\n");
+	int v[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+	fast_parallel_walsh(v, 8);
+	printVec(v, 8);
+	return;
+}
+
+void test_fast_parallel_walsh2() {
+	printf("=========\nFast2\n");
+	int v[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+	fast_parallel_walsh2(v, 8);
+	printVec(v, 8);
+	return;
+}
+
 
 
 int main() {
@@ -64,7 +99,9 @@ int main() {
 	testNumberOfBits2();
 	testCreate_walsh_vector();
 	testCreate_walsh_vector2();
+	testCreate_walsh_vector3();
 	testSimple_parallel_walsh();
-	testSimple_parallel_walsh2();
+	test_fast_parallel_walsh();
+	test_fast_parallel_walsh2();
 	printf("SUCCESS!!\n");
 }
