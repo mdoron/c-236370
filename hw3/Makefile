@@ -17,7 +17,7 @@ tsp: main.o tsp.o
 
 tsp_static: main.o tsp_static.o
 	mpicc -o tsp_static main.o tsp_static.o
-	
+
 # clean previous builds
 clean:
 	@rm -f tsp.o main.o tsp_static.o
@@ -26,13 +26,13 @@ clean:
 # run the executables: course example, dynamic and static.
 # you may change the number of procs below to use more than 2.
 run_236370: tsp_236370
-	@echo "Running supplied implementation: tsp_236370" 
+	@echo "Running supplied implementation: tsp_236370"
 	mpirun -np 2 tsp_236370
-	
+
 run_tsp: tsp
 	@echo "Running dynamic implementation: tsp"
 	mpirun -np 2 tsp
-	
+
 run_tsp_static: tsp_static
 	@echo "Running static implementation: tsp_static"
 	mpirun -np 2 tsp_static
