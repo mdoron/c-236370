@@ -157,7 +157,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
 	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
 	int firstIndex = mRank * regularCount + (mRank < prefNum % numOfProcs ? mRank : prefNum % numOfProcs);
-	int size = r < prefNum % numOfProcs ? regularCount + 1 : regularCount;
+	int size = mRank < prefNum % numOfProcs ? regularCount + 1 : regularCount;
 	int** prefs = malloc((*size) * sizeof(*prefs));
 
 	fillPrefs(numOfProcs,citiesNum, mRank, size, firstIndex, prefs);
