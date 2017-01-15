@@ -163,9 +163,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		}
 	}
 	free(prefixes);
-	for(i = 0; i < citiesNum; ++i)
-		free(dists[i]);
-	free(dists);
 
 	/* collecting data from all processes into root process (0) */
 	int* weights;
