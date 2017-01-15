@@ -106,6 +106,8 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
+		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + min_edges[citiesNum - current - 1] >= bestWeight)
+			continue;
 		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		used[i] = 1;

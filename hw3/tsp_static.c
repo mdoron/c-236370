@@ -11,8 +11,6 @@
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
 
-int* minNowArr;
-int* min_edges;
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -22,66 +20,6 @@ int ABS(int a) {
 //returns the manhatten distance
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
   return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
-}
-
-/*
-@param arr - the array
-@param len - the length
-@param index - a pointer to the index of the maximum value in array
-@return the max value, also update the index pointer to the index with max val
-*/
-int getMax(int* arr, int len, int* index) {
-	*index = 0;
-	for(int i = 0; i < len; i++)
-		if(arr[i] > arr[*index])
-			*index = i;
-	return arr[*index];
-}
-
-/* simple min sort
-@param arr - the array
-@param len - the length
-changes the array to be a sorted array from min value to max
-*/
-void sort(int* arr, int len) {
-	int temp = 0;
-	int minIndex = 0;
-	for(int i  = 0; i < len; i++) {
-		for(int j = i + 1; j < len; j++)
-			if(arr[j] < arr[minIndex])
-				minIndex = j;
-		temp = arr[i];
-		arr[i] = arr[minIndex];
-		arr[minIndex] = temp;
-	}
-}
-
-/*
-@param coordinates and citiesNum
-@returns an array which for each city, holds the min Dist
-very very greedy
-//TODO: Doron, refactor this please
-*/
-
-void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
-	int i, j;
-	min_edges[0] = 0;
-	int curMaxInd = 0;
-	int curMax = 0;		// max in the min_edges array. will be replaced when finding lower weight
-	for(i = 1; i < citiesNum; i++)
-		min_edges[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	curMax = getMax(min_edges, citiesNum, &curMaxInd);
-	for(i = 1; i < citiesNum; i++)
-		for(j = i + 1; j < citiesNum; j++) {
-			int w = getDist(i,j,xCoord,yCoord,citiesNum);
-			if(w < curMax) {
-				min_edges[curMaxInd] = w;
-				curMax = getMax(min_edges, citiesNum, &curMaxInd);
-			}
-		}
-	sort(min_edges, citiesNum);
-	for(i = 2; i < citiesNum; ++i)
-		min_edges[i] += min_edges[i - 1];
 }
 
 
@@ -167,10 +105,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		MPI_Recv(yCoord,citiesNum,MPI_INT,0,2,MPI_COMM_WORLD,&status);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-	int min[citiesNum];
-	minNowArr = min;
-	min_edges = min;
-	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
   if(citiesNum < SERIAL_VAR) {
