@@ -155,7 +155,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	for(int i = 0; i < size; ++i) {
 		// weight of the prefix
 		int ww = getDist(prefixes[i][0],prefixes[i][1],xCoord,yCoord,citiesNum) + getDist(i,j,xCoord,yCoord,citiesNum);
-		int weight = find(prefixes[i], PREFIX_LENGTH, ww, path);
+		int weight = find(prefixes[i], PREFIX_LENGTH, ww, path,xCoord,yCoord,citiesNum);
 		free(prefixes[i]);
 		if(weight < minWeight) {
 			minWeight = weight;
