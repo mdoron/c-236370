@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-
+#define MAX_PATH 10000000
 #define PREFIX_LENGTH 5
 #define TRUE 1
 #define FALSE 0
