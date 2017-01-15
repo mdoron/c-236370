@@ -5,6 +5,7 @@
 #include <limits.h>
 
 
+#define MAX_PATH 10000000
 #define PREF_SIZE 5
 #define TRUE 1
 #define FALSE 0
@@ -347,7 +348,7 @@ void allInitialize(int citiesNum, int* xCoord, int* yCoord) {
 	globalxCoord = xCoord;
 	globalyCoord = yCoord;
 	localBound = INT_MAX;
-	calcDists(int* xCoord, int* yCoord, int citiesNum);
+	calcDists( xCoord, yCoord,citiesNum);
 	int minEdges[citiesNum];
 	minNextEdgesWeight = minEdges;
 	calcMinEdges(xCoord, yCoord, citiesNum);
