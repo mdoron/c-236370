@@ -18,9 +18,9 @@ int weightOf(int i, int j);
 int abs(int n);
 int solve(int prefix[], int len, int initialWeight, int* bestPath);
 int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath);
-
 void calcMinEdges();
 int getMax(int arr[], int* ind, int size);
+
 void sort(int arr[], int size);
 void swap(int* x, int* y);
 int nextPermut(int* prefix);
