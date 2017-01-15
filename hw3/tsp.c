@@ -14,14 +14,19 @@ typedef struct job_t {
 	char isDone;
 } Job;
 
-int find(int pref[], int len, int initialWeight, int* bestPath);
-int findRec(int curInd, int curWeight, int* path, int* used, int* bestPath);
-int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
-int ABS(int n);
-int find(int* pref, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+// int find(int pref[], int len, int initialWeight, int* bestPath);
+// int findRec(int curInd, int curWeight, int* path, int* used, int* bestPath);
+// int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
+// int ABS(int n);
+// int find(int* pref, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+// int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 
 	
+int getDist(int i, int j);
+int ABS(int n);
+int find(int prefix[], int len, int initialWeight, int* bestPath);
+int findRec(int curInd, int curWeight, int* path, int* used, int* bestPath);
+
 void calcMinEdges();
 int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
