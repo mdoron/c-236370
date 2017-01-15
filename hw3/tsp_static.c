@@ -15,6 +15,17 @@
 const int root = 0;
 //====end
 
+int** fillPrefs(int numOfProcs,int citiesNum, int r, int* size);
+int getDist(int i, int j);
+int ABS(int n);
+int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+
+void calcMinEdges();
+int getMax(int arr[], int* ind, int size);
+void sort(int arr[], int size);
+void calcDists();
+
 
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
@@ -82,22 +93,18 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 
 //========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
-int** initialPrefixes(int mRank,int numOfProcs,int citiesNum, int* size) {
-	int totalPrefixes = (citiesNum - 1) * (citiesNum - 2);
-	int regularCount = totalPrefixes / numOfProcs; // the remainder is given to the #remainder first processes
-	*size = mRank < totalPrefixes % numOfProcs ? regularCount + 1 : regularCount;
-	int** prefixes = malloc((*size) * sizeof(int*));
-	int firstIndex = mRank * regularCount + (mRank < totalPrefixes % numOfProcs ? mRank : totalPrefixes % numOfProcs);
+void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int** prefs) {
+	int firstIndex = r * regularCount + (r < prefNum % numOfProcs ? r : prefNum % numOfProcs);
 	int i,j;
-	for(j = 0, i = firstIndex; i < firstIndex + (*size); ++i, ++j) {
-		prefixes[j] = malloc(PREFIX_LENGTH * sizeof(int));
-		prefixes[j][0] = 0;	// all prefixes start at city 0
-		prefixes[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
-		prefixes[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
-		if(prefixes[j][1] <= prefixes[j][2])
-			++prefixes[j][2];
+	for(j = 0, i = firstIndex; i < firstIndex + size; ++i, ++j) {
+		prefs[j] = malloc(PREFIX_LENGTH * sizeof(int));
+		prefs[j][0] = 0;	// all prefixes start at city 0
+		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
+		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
+		if(prefs[j][1] <= prefs[j][2])
+			++prefs[j][2];
 	}
-	return prefixes;
+	return prefs;
 }
 //============= END
 
@@ -146,23 +153,28 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	//============TODO: Doron, refactor HARD from here:
 	/* compute best path at each process */
 
-	int size;
+	;
 	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
-	int** prefixes = initialPrefixes(mRank,numOfProcs,citiesNum, &size);
+	int prefNum = (citiesNum - 1) * (citiesNum - 2);
+	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
+	int size = r < prefNum % numOfProcs ? regularCount + 1 : regularCount;
+	int** prefs = malloc((*size) * sizeof(*prefs));
+
+	fillPrefs(numOfProcs,citiesNum, mRank, size, prefs);
 	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
 	int bestPath[citiesNum]; // stores best path of all paths found until some point
 	int path[citiesNum]; // stores the best path with one of the prefixes
 	for(int i = 0; i < size; ++i) {
 		// weight of the prefix
-		int ww = getDist(prefixes[i][0],prefixes[i][1],xCoord,yCoord,citiesNum) + getDist(prefixes[i][1],prefixes[i][2],xCoord,yCoord,citiesNum);
-		int weight = find(prefixes[i], PREFIX_LENGTH, ww, path,xCoord,yCoord,citiesNum);
-		free(prefixes[i]);
+		int ww = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
+		int weight = find(prefs[i], PREFIX_LENGTH, ww, path,xCoord,yCoord,citiesNum);
+		free(prefs[i]);
 		if(weight < minWeight) {
 			minWeight = weight;
 			memcpy(bestPath,path,citiesNum*sizeof(int));
 		}
 	}
-	free(prefixes);
+	free(prefs);
 
 	/* collecting data from all processes into root process (0) */
 	int* weights;
