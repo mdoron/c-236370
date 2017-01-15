@@ -31,7 +31,7 @@ int nextCity(int* traveldCities,int zeroNumber,int size){
 			zeroNumber--;
 		}
 		if(zeroNumber==0){
-			place =i;
+			place = i;
 			break;
 		}
 	}
