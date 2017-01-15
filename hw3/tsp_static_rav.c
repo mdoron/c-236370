@@ -9,8 +9,9 @@
 */
 
 #define MAX_PATH 10000000
+#define SERIAL_VAR 7
 
-int* minNextEdgesWeight;
+int* minNowArr;
 
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
@@ -23,80 +24,95 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
   return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
 }
 
-
-int getMax(int arr[], int* ind, int size) {
-	int i;
-	*ind = 0;
-	for(i = 0; i < size; ++i)
-		if(arr[i] > arr[*ind])
-			*ind = i;
-	return arr[*ind];
+/*
+@param arr - the array
+@param len - the length
+@param index - a pointer to the index of the maximum value in array
+@return the max value, also update the index pointer to the index with max val
+*/
+int getMax(int* arr, int len, int* index) {
+	*index = 0;
+	for(int i = 0; i < len; i++)
+		if(arr[i] > arr[*index])
+			*index = i;
+	return arr[*index];
 }
 
-// sorts the array
-void sort(int arr[], int size) {
-	int i, j;
-	int min = 0;
-	for(i  = 0; i < size; ++i) {
-		for(j = i + 1; j < size; ++j)
-			if(arr[j] < arr[min])
-				min = j;
-		int tmp = arr[i];
-		arr[i] = arr[min];
-		arr[min] = tmp;
+/* simple min sort
+@param arr - the array
+@param len - the length
+changes the array to be a sorted array from min value to max
+*/
+void sort(int* arr, int len) {
+	int temp = 0;
+	int minIndex = 0;
+	for(int i  = 0; i < len; i++) {
+		for(int j = i + 1; j < len; j++)
+			if(arr[j] < arr[minIndex])
+				minIndex = j;
+		temp = arr[i];
+		arr[i] = arr[minIndex];
+		arr[minIndex] = temp;
 	}
 }
 
-// calculates minNextEdgesWeight array, such that minNextEdgesWeight[i] is the sum of i lowest edge weights
+/*
+@param coordinates and citiesNum
+@returns an array which for each city, holds the min Dist
+very very greedy
+//TODO: Doron, refactor this please
+*/
 void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int i, j;
-	minNextEdgesWeight[0] = 0;
+	minNowArr[0] = 0;
 	int curMaxInd = 0;
-	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
+	int curMax = 0;		// max in the minNowArr array. will be replaced when finding lower weight
 	for(i = 1; i < citiesNum; ++i)
-		minNextEdgesWeight[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
+		minNowArr[i] = getDist(0,i,xCoord,yCoord,citiesNum);
+	curMax = getMax(minNowArr, &curMaxInd, citiesNum);
 	for(i = 1; i < citiesNum; ++i)
 		for(j = i + 1; j < citiesNum; ++j) {
-			int w = dists[i][j];
+			int w = getDist(i,j,xCoord,yCoord,citiesNum);
 			if(w < curMax) {
-				minNextEdgesWeight[curMaxInd] = w;
-				curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
+				minNowArr[curMaxInd] = w;
+				curMax = getMax(minNowArr, &curMaxInd, citiesNum);
 			}
 		}
-	sort(minNextEdgesWeight, citiesNum);
+	sort(minNowArr, citiesNum);
 	for(i = 2; i < citiesNum; ++i)
-		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
+		minNowArr[i] += minNowArr[i - 1];
 }
 
 
 
 
-// solves the hamilton path of minimum weight in recursion
-// curInd is the index of last city in the path until now
-// used is a bit array specifying which cities are already in the path
-int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	if(curInd == citiesNum - 1) {
-		//adding edge from last city to first city to close the cycle
+/*
+@param current - the current index we are working on - last one will be the stop
+@param path - current path
+@param curWeight - curr path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+	if(current == citiesNum - 1) {
 		memcpy(bestPath, path, citiesNum * sizeof(int));
-		return curWeight + dists[path[0]][path[citiesNum - 1]];
+		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
-
 	int bestWeight = MAX_PATH;
 	int receivedPath[citiesNum];
-	int i;
-	for(i = 0; i < citiesNum; ++i) {
+	for(int i = 0; i < citiesNum; ++i) {
 		if(used[i] == 1)
 			continue;
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		if(curWeight + dists[path[curInd]][i] + minNextEdgesWeight[citiesNum - curInd - 1] >= bestWeight)
+		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + minNowArr[citiesNum - current - 1] >= bestWeight)
 			continue;
-		int ww = curWeight + getDist(path[curInd],i,xCoord,yCoord,citiesNum);
-		path[curInd + 1] = i;
+		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
+		path[current + 1] = i;
 		used[i] = 1;
-		int weight = recurseSolve(curInd + 1, ww, path, used, receivedPath,xCoord,yCoord,citiesNum);
+		int weight = findRec(current + 1, ww, path, used, receivedPath,xCoord,yCoord,citiesNum);
 		used[i] = 0;
 		if(weight < bestWeight) {
 			bestWeight = weight;
@@ -108,18 +124,22 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath,
 
 
 
-
-
-// return the best hamilton path and it's weight, such that it has some prefix of cities.
-// initialWeight is the weight of the prefix
-int solve(int prefix[], int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+/*
+@param prefix - gets prefix of a path
+@param len - the prefix length
+@param initialWeight - prefix path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
 	int used[citiesNum];
+  int path[citiesNum];
 	memset(used, 0, citiesNum * sizeof(int));
-	int path[citiesNum];
 	memcpy(path, prefix, len * sizeof(int));
 	for(int i = 0; i < len; ++i)
 		used[prefix[i]] = 1;
-	return recurseSolve(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
+	return findRec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
 }
 
 // The static parellel algorithm main function.
@@ -150,22 +170,18 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		MPI_Recv(yCoord,citiesNum,MPI_INT,0,2,MPI_COMM_WORLD,&status);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-  //int* path = (int*) malloc(sizeof(int)*(citiesNum));
 
-
-  int minEdges[citiesNum];
-	minNextEdgesWeight = minEdges;
 	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
-  if(citiesNum < 6) {
+  if(citiesNum < SERIAL_VAR) {
     //for each process other then "master"
     if(mRank > 0)
       return MAX_PATH;
     int prefix[citiesNum];
     prefix[0] = 0;
     int bestPath[citiesNum];
-    int minWeight = solve(prefix, 1, 0, bestPath,xCoord,yCoord,citiesNum);
+    int minWeight = find(prefix, 1, 0, bestPath,xCoord,yCoord,citiesNum);
     memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
     return minWeight;
   }
