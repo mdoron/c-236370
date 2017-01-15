@@ -15,7 +15,7 @@
 const int root = 0;
 //====end
 
-void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int** prefs);
+void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int regularCount, int** prefs);
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
 int ABS(int n);
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
@@ -93,8 +93,7 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 
 //========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
-void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int** prefs) {
-	int firstIndex = r * regularCount + (r < prefNum % numOfProcs ? r : prefNum % numOfProcs);
+void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int firstIndex, int** prefs) {
 	int i,j;
 	for(j = 0, i = firstIndex; i < firstIndex + size; ++i, ++j) {
 		prefs[j] = malloc(PREFIX_LENGTH * sizeof(int));
@@ -157,10 +156,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
 	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
+	int firstIndex = r * regularCount + (r < prefNum % numOfProcs ? r : prefNum % numOfProcs);
 	int size = r < prefNum % numOfProcs ? regularCount + 1 : regularCount;
 	int** prefs = malloc((*size) * sizeof(*prefs));
 
-	fillPrefs(numOfProcs,citiesNum, mRank, size, prefs);
+	fillPrefs(numOfProcs,citiesNum, mRank, size, regularCount, prefs);
 	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
 	int bestPath[citiesNum]; // stores best path of all paths found until some point
 	int path[citiesNum]; // stores the best path with one of the prefixes
