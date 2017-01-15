@@ -9,7 +9,7 @@
 */
 
 #define MAX_PATH 10000000
-#define SERIAL_VAR 15
+#define SERIAL_VAR 7
 //====TODO: Doron, HARD refactor this
 #define PREFIX_LENGTH 3
 const int root = 0;
@@ -179,7 +179,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	if(mRank == root) {
 		// find best path of all paths received
 		int best = 0;
-		for(i = 0; i < numOfProcs; ++i)
+		for(int i = 0; i < numOfProcs; ++i)
 			if(weights[i] < minWeight) {
 				minWeight = weights[i];
 				best = i;
