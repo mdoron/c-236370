@@ -10,8 +10,7 @@
 
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
-//====TODO: Doron, HARD refactor this
-#define PREFIX_LENGTH 3
+#define PREF_SIZE 3
 const int root = 0;
 //====end
 
@@ -20,11 +19,6 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
 int ABS(int n);
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-
-void calcMinEdges();
-int getMax(int arr[], int* ind, int size);
-void sort(int arr[], int size);
-void calcDists();
 
 
 //normal ABSolute function as implemented in math.h
@@ -91,12 +85,11 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 }
 
 
-//========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
 void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
 	int i,j;
 	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
-		prefs[j] = malloc(PREFIX_LENGTH * sizeof(int));
+		prefs[j] = malloc(PREF_SIZE * sizeof(int));
 		prefs[j][0] = 0;	// all prefixes start at city 0
 		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
 		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
@@ -104,8 +97,6 @@ void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int*
 			++prefs[j][2];
 	}
 }
-//============= END
-
 
 // The static parellel algorithm main function.
 /*
@@ -165,7 +156,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	for(int i = 0; i < size; ++i) {
 		// weight of the prefix
 		int dist = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
-		int weight = find(prefs[i], PREFIX_LENGTH, dist, path,xCoord,yCoord,citiesNum);
+		int weight = find(prefs[i], PREF_SIZE, dist, path,xCoord,yCoord,citiesNum);
 		free(prefs[i]);
 		if(weight < minWeight) {
 			minWeight = weight;
