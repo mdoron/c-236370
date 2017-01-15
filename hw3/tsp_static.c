@@ -94,7 +94,8 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 //========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
 void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
-	for(int i = firstIndex, int j = 0; i < firstIndex + size; ++i, ++j) {
+	int i,j;
+	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
 		prefs[j] = malloc(PREFIX_LENGTH * sizeof(int));
 		prefs[j][0] = 0;	// all prefixes start at city 0
 		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
