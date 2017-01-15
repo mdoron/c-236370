@@ -69,7 +69,9 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int curMax = 0;		// max in the minNowArr array. will be replaced when finding lower weight
 	for(i = 1; i < citiesNum; ++i)
 		minNowArr[i] = getDist(0,i,xCoord,yCoord,citiesNum);
+	printf("MUST\n");
 	curMax = getMax(minNowArr, citiesNum, &curMaxInd);
+	printf("BE\n");
 	for(i = 1; i < citiesNum; ++i)
 		for(j = i + 1; j < citiesNum; ++j) {
 			int w = getDist(i,j,xCoord,yCoord,citiesNum);
@@ -78,7 +80,9 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 				curMax = getMax(minNowArr, citiesNum, &curMaxInd);
 			}
 		}
+		printf("AN\n");
 	sort(minNowArr, citiesNum);
+	printf("ANGEL\n");
 	for(i = 2; i < citiesNum; ++i)
 		minNowArr[i] += minNowArr[i - 1];
 }
@@ -176,7 +180,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		MPI_Recv(yCoord,citiesNum,MPI_INT,0,2,MPI_COMM_WORLD,&status);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-
+	printf("TAM TAM TAM\n");
 	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
