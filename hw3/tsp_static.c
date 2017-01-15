@@ -69,13 +69,13 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int curMax = 0;		// max in the minNowArr array. will be replaced when finding lower weight
 	for(i = 1; i < citiesNum; ++i)
 		minNowArr[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	curMax = getMax(minNowArr, &curMaxInd, citiesNum);
+	curMax = getMax(minNowArr, citiesNum, &curMaxInd);
 	for(i = 1; i < citiesNum; ++i)
 		for(j = i + 1; j < citiesNum; ++j) {
 			int w = getDist(i,j,xCoord,yCoord,citiesNum);
 			if(w < curMax) {
 				minNowArr[curMaxInd] = w;
-				curMax = getMax(minNowArr, &curMaxInd, citiesNum);
+				curMax = getMax(minNowArr, citiesNum, &curMaxInd);
 			}
 		}
 	sort(minNowArr, citiesNum);
