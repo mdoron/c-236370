@@ -156,11 +156,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
 	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
-	int firstIndex = r * regularCount + (r < prefNum % numOfProcs ? r : prefNum % numOfProcs);
+	int firstIndex = mRank * regularCount + (mRank < prefNum % numOfProcs ? mRank : prefNum % numOfProcs);
 	int size = r < prefNum % numOfProcs ? regularCount + 1 : regularCount;
 	int** prefs = malloc((*size) * sizeof(*prefs));
 
-	fillPrefs(numOfProcs,citiesNum, mRank, size, regularCount, prefs);
+	fillPrefs(numOfProcs,citiesNum, mRank, size, firstIndex, prefs);
 	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
 	int bestPath[citiesNum]; // stores best path of all paths found until some point
 	int path[citiesNum]; // stores the best path with one of the prefixes
