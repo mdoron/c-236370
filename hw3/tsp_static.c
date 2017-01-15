@@ -9,8 +9,8 @@
 */
 
 #define MAX_PATH 10000000
-#define SERIAL_VAR 7
-
+#define SERIAL_VAR 15
+#define PREFIX_LENGTH 3 //TODO: refactor this
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -41,13 +41,10 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 	for(int i = 0; i < citiesNum; ++i) {
 		if(used[i] == 1)
 			continue;
-		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
-		// we check that the weight of the path until now including the next city,
-		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
+		int check_now = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		used[i] = 1;
-		int weight = findRec(current + 1, ww, path, used, receivedPath,xCoord,yCoord,citiesNum);
+		int weight = findRec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
 		used[i] = 0;
 		if(weight < bestWeight) {
 			bestWeight = weight;
@@ -76,6 +73,29 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 		used[prefix[i]] = 1;
 	return findRec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
 }
+
+
+//========== TODO: DORON, refactor this hard
+// returns all path prefixes the process have to solve, according to it's rank and number of processes
+int** initialPrefixes(int mRank,int citiesNum, int* size) {
+	int totalPrefixes = (citiesNum - 1) * (citiesNum - 2);
+	int regularCount = totalPrefixes / numProcs; // the remainder is given to the #remainder first processes
+	*size = mRank < totalPrefixes % numProcs ? regularCount + 1 : regularCount;
+	int** prefixes = malloc((*size) * sizeof(int*));
+	int firstIndex = mRank * regularCount + (mRank < totalPrefixes % numProcs ? mRank : totalPrefixes % numProcs);
+	int i,j;
+	for(j = 0, i = firstIndex; i < firstIndex + (*size); ++i, ++j) {
+		prefixes[j] = malloc(PREFIX_LENGTH * sizeof(int));
+		prefixes[j][0] = 0;	// all prefixes start at city 0
+		prefixes[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
+		prefixes[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
+		if(prefixes[j][1] <= prefixes[j][2])
+			++prefixes[j][2];
+	}
+	return prefixes;
+}
+//============= END
+
 
 // The static parellel algorithm main function.
 /*
@@ -118,6 +138,56 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
     memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
     return minWeight;
   }
+	//============TODO: Doron, refactor HARD from here:
+	/* compute best path at each process */
 
-  return -1;
+	int size;
+	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
+	int** prefixes = initialPrefixes(mRank,citiesNum, &size);
+	int minWeight = INT_MAX; // stores the weight of the best path found until some point
+	int bestPath[citiesNum]; // stores best path of all paths found until some point
+	int path[citiesNum]; // stores the best path with one of the prefixes
+	for(i = 0; i < size; ++i) {
+		// weight of the prefix
+		int ww = dists[prefixes[i][0]][prefixes[i][1]] + dists[prefixes[i][1]][prefixes[i][2]];
+		int weight = solve(prefixes[i], PREFIX_LENGTH, ww, path);
+		free(prefixes[i]);
+		if(weight < minWeight) {
+			minWeight = weight;
+			memcpy(bestPath,path,citiesNum*sizeof(int));
+		}
+	}
+	free(prefixes);
+	for(i = 0; i < citiesNum; ++i)
+		free(dists[i]);
+	free(dists);
+
+	/* collecting data from all processes into root process (0) */
+	int* weights;
+	int* paths;
+	if(mRank == root) {
+		weights = malloc(numOfProcs * sizeof(int));
+		paths = malloc(numOfProcs * citiesNum * sizeof(int));
+	}
+
+	// root gathers all the data from other processes to compute final solution
+	// using collective communications as was requested in hw, and process 0 computes the solution, as was requested too
+	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, root, MPI_COMM_WORLD);
+	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, root, MPI_COMM_WORLD);
+	if(mRank == root) {
+		// find best path of all paths received
+		int best = 0;
+		for(i = 0; i < numOfProcs; ++i)
+			if(weights[i] < minWeight) {
+				minWeight = weights[i];
+				best = i;
+			}
+		// copy the best path to output
+		memcpy(shortestPath, paths + best*citiesNum, citiesNum * sizeof(int));
+		free(weights);
+		free(paths);
+	}
+
+	return minWeight;
+	//=====================END
 }
