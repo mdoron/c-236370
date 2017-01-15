@@ -133,7 +133,7 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + minNowArr[citiesNum - current - 1] >= bestWeight)
+		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + minNextEdgesWeight[citiesNum - current - 1] >= bestWeight)
 			continue;
 		printf("TO\n");
 		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
@@ -202,8 +202,9 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	printf("TAM TAM TAM\n");
 	int min[citiesNum];
-	minNowArr = min; 
-	calcMinEdges(xCoord,yCoord, citiesNum);
+	minNowArr = min;
+	minNextEdgesWeight = min;
+	calcMinEdges2(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
   if(citiesNum < SERIAL_VAR) {
