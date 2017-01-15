@@ -4,16 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-
-#define PREFIX_LENGTH 5
-#define TRUE 1
-#define FALSE 0
-
-typedef struct task_t {
-	int prefix[PREFIX_LENGTH];
-	char finish;
-} Task;
-
+int** initialPrefixes(int citiesNum, int* size);
 int weightOf(int i, int j);
 int abs(int n);
 int solve(int prefix[], int len, int initialWeight, int* bestPath);
@@ -21,197 +12,157 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath)
 void calcMinEdges();
 int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
-void swap(int* x, int* y);
-int nextPermut(int* prefix);
-void allInitialize(int citiesNum, int* xCoord, int* yCoord);
-void allDestruct();
-void masterInitialize(int prefix[]);
-void workerInitialize();
-void createTask(int prefix[], char finish);
-int prefixWeight(int prefix[]);
 void calcDists();
 
 const int root = 0;
 int* globalxCoord;
 int* globalyCoord;
-int* minNextEdgesWeight;
+int* minNextEdgesWeight; // in index i, stores the sum of i weight of minimum edges
 int globalCitiesNum;
-int** dists;
-int localBound;
+int** dists; // dist[i][j] stores the weight of edge i--j
 int numProcs;
 int myRank;
-Task* task;
 
-enum Tag { ASK_FOR_JOB, REPORT, NOTHING_TO_REPORT, REPORT_WEIGHT, REPORT_PATH, NEW_JOB, NEW_BOUND };
+#define PREFIX_LENGTH 3
+#define TRUE 1
+#define FALSE 0
 
-void build(Task* data, MPI_Datatype* message_type_ptr) {
-	int block_lengths[2];
-	MPI_Aint displacements[2];
-	MPI_Datatype typelist[2];
-	MPI_Aint addresses[3];  // Helper array
+enum Message { CITIES_NUM_TAG, XCOORD_TAG, YCOORD_TAG }; // tags for distributing parameters from root to all processes
 
-	// First specify the types
-	typelist[0] = MPI_INT;
-	typelist[1] = MPI_CHAR;
-
-	// Specify the number of elements of each type
-	block_lengths[0] = PREFIX_LENGTH;
-	block_lengths[1] = 1;
-
-	// Calculate the displacements of the members  relative to indata
-	MPI_Get_address(data, &addresses[0]);
-	MPI_Get_address(&(data->prefix), &addresses[1]);
-	MPI_Get_address(&(data->finish), &addresses[2]);
-
-	displacements[0] = addresses[1] - addresses[0];
-	displacements[1] = addresses[2] - addresses[0];
-
-	// Create the derived type
-	MPI_Type_create_struct(2, block_lengths,displacements, typelist, message_type_ptr);
-
-	// Commit it so that it can be used
-	MPI_Type_commit(message_type_ptr);
-}
-
-// The dynamic parellel algorithm main function.
+// The static parellel algorithm main function.
 int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 {
 	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
-	if(numProcs == 1)
-		exit(0);
-	int i;
-	int bestWeight = INT_MAX;
-	int bestPath[citiesNum];
-	MPI_Datatype MPI_Task;
-	Task t;
-	build(&t,&MPI_Task);
+
+	/* transfering data from root to all processes, in a tree - each receiving process distibutes to 2 other processes */
 	MPI_Status status;
-	char info;
-	int path[citiesNum];
-	int weight;
-	allInitialize(citiesNum, xCoord, yCoord);
-
-	if(myRank == root) {
-		int prefix[PREFIX_LENGTH];
-		masterInitialize(prefix);
-
-		do {
-			createTask(prefix, FALSE);
-			while(TRUE) {
-				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				int source = status.MPI_SOURCE;
-				if(status.MPI_TAG == ASK_FOR_JOB) {
-					// check if need irecv
-					MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
-					MPI_Ssend(task, 1, MPI_Task, source, NEW_JOB, MPI_COMM_WORLD);
-					break;
-				}
-				else if(status.MPI_TAG == REPORT) {
-					MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
-					MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
-					if(weight < bestWeight) {
-						bestWeight = weight;
-						memcpy(bestPath, path, citiesNum * sizeof(int));
-						for(i = 0; i < numProcs; ++i)
-							if(i != root)
-								MPI_Ssend(&bestWeight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD);
-					}
-				}
+	int i;
+	if(myRank == 0) {
+		for(i = 1; i <= 2; i++)
+			if(numProcs > 2*myRank+i) {
+				// using point to point communication as requested in the hw
+				MPI_Ssend(&citiesNum,1,MPI_INT,i,CITIES_NUM_TAG,MPI_COMM_WORLD);
+				MPI_Ssend(xCoord,citiesNum,MPI_INT,i,XCOORD_TAG,MPI_COMM_WORLD);
+				MPI_Ssend(yCoord,citiesNum,MPI_INT,i,YCOORD_TAG,MPI_COMM_WORLD);
 			}
-		} while(nextPermut(prefix));
-		createTask(prefix, TRUE);
-		for(i = 0; i < numProcs; ++i)
-			if(i != root)
-				MPI_Ssend(task, 1, MPI_Task, i, NEW_JOB, MPI_COMM_WORLD);
-		int count = 0;
-		while(count < numProcs - 1) {
-			MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-			int source = status.MPI_SOURCE;
-			if(status.MPI_TAG == ASK_FOR_JOB) {
-				MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
-				continue;
-			}
-			else if(status.MPI_TAG == REPORT) {
-				MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
-				MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
-				if(weight < bestWeight) {
-					bestWeight = weight;
-					memcpy(bestPath, path, citiesNum * sizeof(int));
-					for(i = 0; i < numProcs; ++i)
-						if(i != root)
-							MPI_Ssend(&bestWeight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD);
-				}
-			}
-			else if(status.MPI_TAG == NOTHING_TO_REPORT) {
-				MPI_Recv(&info,1,MPI_CHAR,source,NOTHING_TO_REPORT, MPI_COMM_WORLD, &status);
-				++count;
-			}
-		}
-		memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
 	}
 	else {
-		workerInitialize();
-
-		while(TRUE) {
-			info = ASK_FOR_JOB;
-			MPI_Ssend(&info,1,MPI_CHAR,root,ASK_FOR_JOB,MPI_COMM_WORLD);
-			do {
-				MPI_Probe(root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				if(status.MPI_TAG == NEW_JOB)
-					MPI_Recv(task,1,MPI_Task,root,NEW_JOB, MPI_COMM_WORLD, &status);
-				else if(status.MPI_TAG == NEW_BOUND)
-					MPI_Recv(&localBound,1,MPI_INT,root,NEW_BOUND, MPI_COMM_WORLD, &status);
-			} while(status.MPI_TAG != NEW_JOB);
-
-			if(task->finish) {
-				MPI_Ssend(&info,1,MPI_CHAR,root,NOTHING_TO_REPORT,MPI_COMM_WORLD);
-				break;
+		// using point to point communication as requested in the hw
+		MPI_Recv(&citiesNum,1,MPI_INT,(myRank-1)/2,CITIES_NUM_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(xCoord,citiesNum,MPI_INT,(myRank-1)/2,XCOORD_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(yCoord,citiesNum,MPI_INT,(myRank-1)/2,YCOORD_TAG, MPI_COMM_WORLD, &status);
+		for(i = 1; i <= 2; i++)
+			if(numProcs > 2*myRank+i) {
+				// using point to point communication as requested in the hw
+				MPI_Ssend(&citiesNum,1,MPI_INT,2*myRank+i,CITIES_NUM_TAG,MPI_COMM_WORLD);
+				MPI_Ssend(xCoord,citiesNum,MPI_INT,2*myRank+i,XCOORD_TAG,MPI_COMM_WORLD);
+				MPI_Ssend(yCoord,citiesNum,MPI_INT,2*myRank+i,YCOORD_TAG,MPI_COMM_WORLD);
 			}
-			weight = solve(task->prefix, PREFIX_LENGTH, prefixWeight(task->prefix), path);
-			if(weight < localBound) {
-				info = REPORT;
-				MPI_Ssend(&info,1,MPI_CHAR,root,REPORT,MPI_COMM_WORLD);
-				MPI_Ssend(&weight,1,MPI_INT,root,REPORT_WEIGHT,MPI_COMM_WORLD);
-				MPI_Ssend(path,citiesNum,MPI_INT,root,REPORT_PATH,MPI_COMM_WORLD);
-			}
-		}
-
 	}
-	allDestruct();
-	return bestWeight;
+
+	/* wait for all prcoesses to receive the data before continuing execution */
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	/* initializations */
+	globalCitiesNum = citiesNum;
+	globalxCoord = xCoord;
+	globalyCoord = yCoord;
+	calcDists();
+	int minEdges[citiesNum];
+	minNextEdgesWeight = minEdges;
+	calcMinEdges();
+	/*******/
+
+	/* for low citiesNum we will use only root process because the communication overhead might make it slower than serial */
+	if(citiesNum < 6) {
+		if(myRank > 0)
+			return INT_MAX;
+		int prefix[citiesNum];
+		prefix[0] = 0;
+		int bestPath[citiesNum];
+		int minWeight = solve(prefix, 1, 0, bestPath);
+		memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
+		return minWeight;
+	}
+
+
+	// only citiesNum^2 prcoesses allowed
+	if(numProcs > (citiesNum-2) * (citiesNum-1)) {
+		numProcs = (citiesNum-2) * (citiesNum-1);
+		if(myRank >= numProcs)
+			return INT_MAX;
+	}
+
+	/* compute best path at each process */
+
+	int size;
+	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
+	int** prefixes = initialPrefixes(citiesNum, &size);
+	int minWeight = INT_MAX; // stores the weight of the best path found until some point
+	int bestPath[citiesNum]; // stores best path of all paths found until some point
+	int path[citiesNum]; // stores the best path with one of the prefixes
+	for(i = 0; i < size; ++i) {
+		// weight of the prefix
+		int ww = dists[prefixes[i][0]][prefixes[i][1]] + dists[prefixes[i][1]][prefixes[i][2]];
+		int weight = solve(prefixes[i], PREFIX_LENGTH, ww, path);
+		free(prefixes[i]);
+		if(weight < minWeight) {
+			minWeight = weight;
+			memcpy(bestPath,path,citiesNum*sizeof(int));
+		}
+	}
+	free(prefixes);
+	for(i = 0; i < citiesNum; ++i)
+		free(dists[i]);
+	free(dists);
+
+	/* collecting data from all processes into root process (0) */
+	int* weights;
+	int* paths;
+	if(myRank == root) {
+		weights = malloc(numProcs * sizeof(int));
+		paths = malloc(numProcs * citiesNum * sizeof(int));
+	}
+
+	// root gathers all the data from other processes to compute final solution
+	// using collective communications as was requested in hw, and process 0 computes the solution, as was requested too
+	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, root, MPI_COMM_WORLD);
+	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, root, MPI_COMM_WORLD);
+	if(myRank == root) {
+		// find best path of all paths received
+		int best = 0;
+		for(i = 0; i < numProcs; ++i)
+			if(weights[i] < minWeight) {
+				minWeight = weights[i];
+				best = i;
+			}
+		// copy the best path to output
+		memcpy(shortestPath, paths + best*citiesNum, citiesNum * sizeof(int));
+		free(weights);
+		free(paths);
+	}
+
+	return minWeight;
 }
 
-void swap(int* x, int* y) {
-	int tmp = *x;
-	*x = *y;
-	*y = tmp;
-}
-
-//keep first node always 0
-int nextPermut(int* prefix) {
-	int i, j;
-	for(i = PREFIX_LENGTH-2; i >= 1; --i)
-		if(prefix[i] < prefix[i+1])
-			break;
-	if(i < 1) // last permutation
-		return 0;
-	for(j = PREFIX_LENGTH-1; j > i; --j)
-		if(prefix[j] > prefix[i])
-			break;
-	swap(prefix+i, prefix+j);
-	++i;
-	for(j = PREFIX_LENGTH-1; j > i; --j, ++i)
-		swap(prefix+i, prefix+j);
-	return 1;
-}
-
-int prefixWeight(int prefix[]) {
-	int w = 0;
-	int i;
-	for(i = 0; i < PREFIX_LENGTH - 1;++i)
-		w += dists[prefix[i]][prefix[i+1]];
-	return w;
+// returns all path prefixes the process have to solve, according to it's rank and number of processes
+int** initialPrefixes(int citiesNum, int* size) {
+	int totalPrefixes = (citiesNum - 1) * (citiesNum - 2);
+	int regularCount = totalPrefixes / numProcs; // the remainder is given to the #remainder first processes
+	*size = myRank < totalPrefixes % numProcs ? regularCount + 1 : regularCount;
+	int** prefixes = malloc((*size) * sizeof(int*));
+	int firstIndex = myRank * regularCount + (myRank < totalPrefixes % numProcs ? myRank : totalPrefixes % numProcs);
+	int i,j;
+	for(j = 0, i = firstIndex; i < firstIndex + (*size); ++i, ++j) {
+		prefixes[j] = malloc(PREFIX_LENGTH * sizeof(int));
+		prefixes[j][0] = 0;	// all prefixes start at city 0
+		prefixes[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
+		prefixes[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
+		if(prefixes[j][1] <= prefixes[j][2])
+			++prefixes[j][2];
+	}
+	return prefixes;
 }
 
 int weightOf(int i, int j) {
@@ -222,9 +173,10 @@ int abs(int n) {
 	return n >= 0 ? n : -n;
 }
 
+// calculates the distances between each 2 cities, into dists matrix
 void calcDists() {
 	int i, j;
-	dists = (int**) malloc(globalCitiesNum *sizeof(int*));
+	dists = (int**) malloc(globalCitiesNum * sizeof(int*));
 	for(i = 0; i < globalCitiesNum; ++i) {
 		dists[i] = (int*) malloc(globalCitiesNum * sizeof(int));
 		for(j = 0; j < globalCitiesNum; j++)
@@ -232,27 +184,23 @@ void calcDists() {
 	}
 }
 
+// calculates minNextEdgesWeight array, such that minNextEdgesWeight[i] is the sum of i lowest edge weights
 void calcMinEdges() {
 	int i, j;
 	minNextEdgesWeight[0] = 0;
 	int curMaxInd = 0;
 	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
 	for(i = 1; i < globalCitiesNum; ++i)
-		minNextEdgesWeight[i] = weightOf(0,i);
+		minNextEdgesWeight[i] = dists[0][i];
 	curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
 	for(i = 1; i < globalCitiesNum; ++i)
 		for(j = i + 1; j < globalCitiesNum; ++j) {
-			int w = weightOf(i,j);
+			int w = dists[i][j];
 			if(w < curMax) {
 				minNextEdgesWeight[curMaxInd] = w;
 				curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
 			}
 		}
-	int min = minNextEdgesWeight[1];
-	for(i = 2; i < globalCitiesNum; ++i)
-		if(minNextEdgesWeight[i] < min)
-			min = minNextEdgesWeight[i];
-	minNextEdgesWeight[curMaxInd] = min;
 	sort(minNextEdgesWeight, globalCitiesNum);
 	for(i = 2; i < globalCitiesNum; ++i)
 		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
@@ -267,6 +215,7 @@ int getMax(int arr[], int* ind, int size) {
 	return arr[*ind];
 }
 
+// sorts the array
 void sort(int arr[], int size) {
 	int i, j;
 	int min = 0;
@@ -280,6 +229,8 @@ void sort(int arr[], int size) {
 	}
 }
 
+// return the best hamilton path and it's weight, such that it has some prefix of cities.
+// initialWeight is the weight of the prefix
 int solve(int prefix[], int len, int initialWeight, int* bestPath) {
 	int used[globalCitiesNum];
 	memset(used, FALSE, globalCitiesNum * sizeof(int));
@@ -291,11 +242,14 @@ int solve(int prefix[], int len, int initialWeight, int* bestPath) {
 	return recurseSolve(len - 1, initialWeight, path, used, bestPath);
 }
 
+// solves the hamilton path of minimum weight in recursion
+// curInd is the index of last city in the path until now
+// used is a bit array specifying which cities are already in the path
 int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath) {
 	if(curInd == globalCitiesNum - 1) {
 		//adding edge from last city to first city to close the cycle
 		memcpy(bestPath, path, globalCitiesNum * sizeof(int));
-		return curWeight + weightOf(path[0],path[globalCitiesNum - 1]);
+		return curWeight + dists[path[0]][path[globalCitiesNum - 1]];
 	}
 
 	int bestWeight = INT_MAX;
@@ -304,9 +258,12 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath)
 	for(i = 0; i < globalCitiesNum; ++i) {
 		if(used[i] == TRUE)
 			continue;
-		if(curWeight + weightOf(path[curInd],i) + minNextEdgesWeight[globalCitiesNum - curInd - 1] >= localBound)	//bestWeight before
+		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
+		// we check that the weight of the path until now including the next city,
+		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
+		if(curWeight + dists[path[curInd]][i] + minNextEdgesWeight[globalCitiesNum - curInd - 1] >= bestWeight)
 			continue;
-		int ww = curWeight + weightOf(path[curInd],i);
+		int ww = curWeight + dists[path[curInd]][i];
 		path[curInd + 1] = i;
 		used[i] = TRUE;
 		int weight = recurseSolve(curInd + 1, ww, path, used, receivedPath);
@@ -317,39 +274,4 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath)
 		}
 	}
 	return bestWeight;
-}
-
-void allInitialize(int citiesNum, int* xCoord, int* yCoord) {
-	globalCitiesNum = citiesNum;
-	globalxCoord = xCoord;
-	globalyCoord = yCoord;
-	localBound = INT_MAX;
-	calcDists();
-	int minEdges[citiesNum];
-	minNextEdgesWeight = minEdges;
-	calcMinEdges();
-	task = (Task*) malloc(sizeof(Task));
-}
-
-void allDestruct() {
-	int i;
-	for(i = 0; i < globalCitiesNum; ++i)
-		free(dists[i]);
-	free(dists);
-	free(task);
-}
-
-void masterInitialize(int prefix[]) {
-	int i;
-	for(i = 0; i < PREFIX_LENGTH; ++i)
-		prefix[i] = i;
-}
-
-void workerInitialize() {
-
-}
-
-void createTask(int prefix[], char finish) {
-	memcpy(task->prefix, prefix, PREFIX_LENGTH * sizeof(int));
-	task->finish = finish;
 }
