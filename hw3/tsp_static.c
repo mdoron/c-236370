@@ -58,7 +58,7 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
 	for(i = 1; i < citiesNum; ++i)
 		for(j = i + 1; j < citiesNum; ++j) {
-			int w = dists[i][j];
+			int w = getDist(i,j,xCoord,yCoord,citiesNum);
 			if(w < curMax) {
 				minNextEdgesWeight[curMaxInd] = w;
 				curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
@@ -79,7 +79,7 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath,
 	if(curInd == citiesNum - 1) {
 		//adding edge from last city to first city to close the cycle
 		memcpy(bestPath, path, citiesNum * sizeof(int));
-		return curWeight + dists[path[0]][path[citiesNum - 1]];
+		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
 
 	int bestWeight = MAX_PATH;
@@ -91,7 +91,7 @@ int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath,
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		if(curWeight + dists[path[curInd]][i] + minNextEdgesWeight[citiesNum - curInd - 1] >= bestWeight)
+		if(curWeight + getDist(path[curInd],i,xCoord,yCoord,citiesNum) + minNextEdgesWeight[citiesNum - curInd - 1] >= bestWeight)
 			continue;
 		int ww = curWeight + getDist(path[curInd],i,xCoord,yCoord,citiesNum);
 		path[curInd + 1] = i;
