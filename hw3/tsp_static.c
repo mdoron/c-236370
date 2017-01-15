@@ -69,9 +69,7 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int curMax = 0;		// max in the minNowArr array. will be replaced when finding lower weight
 	for(i = 1; i < citiesNum; ++i)
 		minNowArr[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	printf("MUST\n");
 	curMax = getMax(minNowArr, citiesNum, &curMaxInd);
-	printf("BE\n");
 	for(i = 1; i < citiesNum; ++i)
 		for(j = i + 1; j < citiesNum; ++j) {
 			int w = getDist(i,j,xCoord,yCoord,citiesNum);
@@ -80,9 +78,7 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 				curMax = getMax(minNowArr, citiesNum, &curMaxInd);
 			}
 		}
-		printf("AN\n");
 	sort(minNowArr, citiesNum);
-	printf("ANGEL\n");
 	for(i = 2; i < citiesNum; ++i)
 		minNowArr[i] += minNowArr[i - 1];
 }
@@ -119,9 +115,7 @@ void calcMinEdges2(int* xCoord,int* yCoord,int citiesNum) {
 @return - will return the best path's weight
 */
 int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	printf("BEEN\n");
 	if(current == citiesNum - 1) {
-		printf("TRYING\n");
 		memcpy(bestPath, path, citiesNum * sizeof(int));
 		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
@@ -135,14 +129,11 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
 		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + minNextEdgesWeight[citiesNum - current - 1] >= bestWeight)
 			continue;
-		printf("TO\n");
 		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		used[i] = 1;
-		printf("MEET\n");
 		int weight = findRec(current + 1, ww, path, used, receivedPath,xCoord,yCoord,citiesNum);
 		used[i] = 0;
-		printf("YOU\n");
 		if(weight < bestWeight) {
 			bestWeight = weight;
 			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
@@ -162,7 +153,6 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 @return - will return the best path's weight
 */
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-  printf("HEY\n");
 	int used[citiesNum];
   int path[citiesNum];
 	memset(used, 0, citiesNum * sizeof(int));
@@ -200,7 +190,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		MPI_Recv(yCoord,citiesNum,MPI_INT,0,2,MPI_COMM_WORLD,&status);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-	printf("TAM TAM TAM\n");
 	int min[citiesNum];
 	minNowArr = min;
 	minNextEdgesWeight = min;
