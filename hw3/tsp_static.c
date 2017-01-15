@@ -48,24 +48,24 @@ void sort(int arr[], int size) {
 }
 
 // calculates minNextEdgesWeight array, such that minNextEdgesWeight[i] is the sum of i lowest edge weights
-void calcMinEdges() {
+void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int i, j;
 	minNextEdgesWeight[0] = 0;
 	int curMaxInd = 0;
 	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
-	for(i = 1; i < globalCitiesNum; ++i)
-		minNextEdgesWeight[i] = dists[0][i];
-	curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
-	for(i = 1; i < globalCitiesNum; ++i)
-		for(j = i + 1; j < globalCitiesNum; ++j) {
+	for(i = 1; i < citiesNum; ++i)
+		minNextEdgesWeight[i] = getDist(0,i,xCoord,yCoord,citiesNum);
+	curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
+	for(i = 1; i < citiesNum; ++i)
+		for(j = i + 1; j < citiesNum; ++j) {
 			int w = dists[i][j];
 			if(w < curMax) {
 				minNextEdgesWeight[curMaxInd] = w;
-				curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
+				curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
 			}
 		}
-	sort(minNextEdgesWeight, globalCitiesNum);
-	for(i = 2; i < globalCitiesNum; ++i)
+	sort(minNextEdgesWeight, citiesNum);
+	for(i = 2; i < citiesNum; ++i)
 		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
 }
 
@@ -155,7 +155,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 
   int minEdges[citiesNum];
 	minNextEdgesWeight = minEdges;
-	calcMinEdges();
+	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
   if(citiesNum < 6) {
