@@ -15,8 +15,8 @@
 const int root = 0;
 //====end
 
-int** fillPrefs(int numOfProcs,int citiesNum, int r, int* size);
-int getDist(int i, int j);
+void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int** prefs);
+int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
 int ABS(int n);
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
