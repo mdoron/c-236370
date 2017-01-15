@@ -12,7 +12,7 @@
 #define SERIAL_VAR 7
 
 int* minNowArr;
-
+int* minNextEdgesWeight;
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -88,6 +88,26 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 }
 
 
+void calcMinEdges2(int* xCoord,int* yCoord,int citiesNum) {
+	int i, j;
+	minNextEdgesWeight[0] = 0;
+	int curMaxInd = 0;
+	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
+	for(i = 1; i < citiesNum; ++i)
+		minNextEdgesWeight[i] = dists[0][i];
+	curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
+	for(i = 1; i < citiesNum; ++i)
+		for(j = i + 1; j < citiesNum; ++j) {
+			int w = dists[i][j];
+			if(w < curMax) {
+				minNextEdgesWeight[curMaxInd] = w;
+				curMax = getMax(minNextEdgesWeight, &curMaxInd, citiesNum);
+			}
+		}
+	sort(minNextEdgesWeight, citiesNum);
+	for(i = 2; i < globalCitiesNum; ++i)
+		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
+}
 
 
 /*
@@ -181,6 +201,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 	printf("TAM TAM TAM\n");
+	int min[citiesNum];
+	minNowArr = min; 
 	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
