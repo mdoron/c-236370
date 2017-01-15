@@ -10,7 +10,12 @@
 
 #define MAX_PATH 10000000
 #define SERIAL_VAR 15
-#define PREFIX_LENGTH 3 //TODO: refactor this
+//====TODO: Doron, HARD refactor this
+#define PREFIX_LENGTH 3
+const int root = 0;
+//====end
+
+
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -77,12 +82,12 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 
 //========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
-int** initialPrefixes(int mRank,int citiesNum, int* size) {
+int** initialPrefixes(int mRank,int numOfProcs,int citiesNum, int* size) {
 	int totalPrefixes = (citiesNum - 1) * (citiesNum - 2);
-	int regularCount = totalPrefixes / numProcs; // the remainder is given to the #remainder first processes
-	*size = mRank < totalPrefixes % numProcs ? regularCount + 1 : regularCount;
+	int regularCount = totalPrefixes / numOfProcs; // the remainder is given to the #remainder first processes
+	*size = mRank < totalPrefixes % numOfProcs ? regularCount + 1 : regularCount;
 	int** prefixes = malloc((*size) * sizeof(int*));
-	int firstIndex = mRank * regularCount + (mRank < totalPrefixes % numProcs ? mRank : totalPrefixes % numProcs);
+	int firstIndex = mRank * regularCount + (mRank < totalPrefixes % numOfProcs ? mRank : totalPrefixes % numOfProcs);
 	int i,j;
 	for(j = 0, i = firstIndex; i < firstIndex + (*size); ++i, ++j) {
 		prefixes[j] = malloc(PREFIX_LENGTH * sizeof(int));
@@ -143,14 +148,14 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 
 	int size;
 	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
-	int** prefixes = initialPrefixes(mRank,citiesNum, &size);
-	int minWeight = INT_MAX; // stores the weight of the best path found until some point
+	int** prefixes = initialPrefixes(mRank,numOfProcs,citiesNum, &size);
+	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
 	int bestPath[citiesNum]; // stores best path of all paths found until some point
 	int path[citiesNum]; // stores the best path with one of the prefixes
-	for(i = 0; i < size; ++i) {
+	for(int i = 0; i < size; ++i) {
 		// weight of the prefix
-		int ww = dists[prefixes[i][0]][prefixes[i][1]] + dists[prefixes[i][1]][prefixes[i][2]];
-		int weight = solve(prefixes[i], PREFIX_LENGTH, ww, path);
+		int ww = dists[prefixes[i][0]][prefixes[i][1]] + getDist(i,j,xCoord,yCoord,citiesNum);
+		int weight = find(prefixes[i], PREFIX_LENGTH, ww, path);
 		free(prefixes[i]);
 		if(weight < minWeight) {
 			minWeight = weight;
