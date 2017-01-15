@@ -15,7 +15,7 @@
 const int root = 0;
 //====end
 
-void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int regularCount, int** prefs);
+void fillPrefs(int procsNum,int citiesNum, int r, int size, int count, int** prefs);
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
 int ABS(int n);
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
@@ -93,7 +93,7 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 
 //========== TODO: DORON, refactor this hard
 // returns all path prefixes the process have to solve, according to it's rank and number of processes
-void fillPrefs(int numOfProcs,int citiesNum, int r, int size, int firstIndex, int** prefs) {
+void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
 	int i,j;
 	for(j = 0, i = firstIndex; i < firstIndex + size; ++i, ++j) {
 		prefs[j] = malloc(PREFIX_LENGTH * sizeof(int));
@@ -114,15 +114,15 @@ gets the cities num and coordinates
 returns the shortestPath
 */
 int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
-  int mRank, numOfProcs;
-	MPI_Comm_rank(MPI_COMM_WORLD, &mRank);
-	MPI_Comm_size(MPI_COMM_WORLD, &numOfProcs);
+  int rank, procsNum;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &procsNum);
 	MPI_Status status;
 
-  if (mRank==0){
+  if (rank==0){
 		//"master" part - send variables to other processes
 		/*sending*/
-		for(int i=1;i<numOfProcs;i++){
+		for(int i=1;i<procsNum;i++){
 			MPI_Bsend(&citiesNum,1,MPI_INT,i,0,MPI_COMM_WORLD);
 			MPI_Bsend(xCoord,citiesNum,MPI_INT,i,1,MPI_COMM_WORLD);
 			MPI_Bsend(yCoord,citiesNum,MPI_INT,i,2,MPI_COMM_WORLD);
@@ -140,7 +140,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
   //using serial algorithm
   if(citiesNum < SERIAL_VAR) {
     //for each process other then "master"
-    if(mRank > 0)
+    if(rank > 0)
       return MAX_PATH;
     int prefix[citiesNum];
     prefix[0] = 0;
@@ -152,26 +152,25 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	//============TODO: Doron, refactor HARD from here:
 	/* compute best path at each process */
 
-	;
 	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
-	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
-	int firstIndex = mRank * regularCount + (mRank < prefNum % numOfProcs ? mRank : prefNum % numOfProcs);
-	int size = mRank < prefNum % numOfProcs ? regularCount + 1 : regularCount;
+	int count = prefNum / procsNum; // the remainder is given to the #remainder first processes
+	int firstIndex = rank * count + (rank < prefNum % procsNum ? rank : prefNum % procsNum);
+	int size = rank < prefNum % procsNum ? count + 1 : count;
 	int** prefs = malloc(size * sizeof(*prefs));
 
-	fillPrefs(numOfProcs,citiesNum, mRank, size, firstIndex, prefs);
+	fillPrefs(procsNum,citiesNum, rank, size, firstIndex, prefs);
 	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
 	int bestPath[citiesNum]; // stores best path of all paths found until some point
 	int path[citiesNum]; // stores the best path with one of the prefixes
 	for(int i = 0; i < size; ++i) {
 		// weight of the prefix
-		int ww = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
-		int weight = find(prefs[i], PREFIX_LENGTH, ww, path,xCoord,yCoord,citiesNum);
+		int dist = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
+		int weight = find(prefs[i], PREFIX_LENGTH, dist, path,xCoord,yCoord,citiesNum);
 		free(prefs[i]);
 		if(weight < minWeight) {
 			minWeight = weight;
-			memcpy(bestPath,path,citiesNum*sizeof(int));
+			memcpy(bestPath, path, sizeof(*path)*citiesNum);
 		}
 	}
 	free(prefs);
@@ -179,19 +178,19 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	/* collecting data from all processes into root process (0) */
 	int* weights;
 	int* paths;
-	if(mRank == root) {
-		weights = malloc(numOfProcs * sizeof(int));
-		paths = malloc(numOfProcs * citiesNum * sizeof(int));
+	if(rank == root) {
+		weights = malloc(sizeof(int) * procsNum);
+		paths = malloc(sizeof(int) * (procsNum * citiesNum));
 	}
 
 	// root gathers all the data from other processes to compute final solution
 	// using collective communications as was requested in hw, and process 0 computes the solution, as was requested too
 	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, root, MPI_COMM_WORLD);
 	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, root, MPI_COMM_WORLD);
-	if(mRank == root) {
+	if(rank == root) {
 		// find best path of all paths received
 		int best = 0;
-		for(int i = 0; i < numOfProcs; ++i)
+		for(int i = 0; i < procsNum; ++i)
 			if(weights[i] < minWeight) {
 				minWeight = weights[i];
 				best = i;
