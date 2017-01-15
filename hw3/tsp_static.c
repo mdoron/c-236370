@@ -105,7 +105,7 @@ void calcMinEdges2(int* xCoord,int* yCoord,int citiesNum) {
 			}
 		}
 	sort(minNextEdgesWeight, citiesNum);
-	for(i = 2; i < globalCitiesNum; ++i)
+	for(i = 2; i < citiesNum; ++i)
 		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
 }
 
