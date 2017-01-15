@@ -10,6 +10,8 @@
 
 #define MAX_PATH 10000000
 
+int* minNextEdgesWeight;
+
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -20,6 +22,54 @@ int ABS(int a) {
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
   return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
 }
+
+
+int getMax(int arr[], int* ind, int size) {
+	int i;
+	*ind = 0;
+	for(i = 0; i < size; ++i)
+		if(arr[i] > arr[*ind])
+			*ind = i;
+	return arr[*ind];
+}
+
+// sorts the array
+void sort(int arr[], int size) {
+	int i, j;
+	int min = 0;
+	for(i  = 0; i < size; ++i) {
+		for(j = i + 1; j < size; ++j)
+			if(arr[j] < arr[min])
+				min = j;
+		int tmp = arr[i];
+		arr[i] = arr[min];
+		arr[min] = tmp;
+	}
+}
+
+// calculates minNextEdgesWeight array, such that minNextEdgesWeight[i] is the sum of i lowest edge weights
+void calcMinEdges() {
+	int i, j;
+	minNextEdgesWeight[0] = 0;
+	int curMaxInd = 0;
+	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
+	for(i = 1; i < globalCitiesNum; ++i)
+		minNextEdgesWeight[i] = dists[0][i];
+	curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
+	for(i = 1; i < globalCitiesNum; ++i)
+		for(j = i + 1; j < globalCitiesNum; ++j) {
+			int w = dists[i][j];
+			if(w < curMax) {
+				minNextEdgesWeight[curMaxInd] = w;
+				curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
+			}
+		}
+	sort(minNextEdgesWeight, globalCitiesNum);
+	for(i = 2; i < globalCitiesNum; ++i)
+		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
+}
+
+
 
 
 // solves the hamilton path of minimum weight in recursion
@@ -101,6 +151,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
   //int* path = (int*) malloc(sizeof(int)*(citiesNum));
+
+
+  int minEdges[citiesNum];
+	minNextEdgesWeight = minEdges;
+	calcMinEdges();
 
   //using serial algorithm
   if(citiesNum < 6) {
