@@ -158,7 +158,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	int regularCount = prefNum / numOfProcs; // the remainder is given to the #remainder first processes
 	int firstIndex = mRank * regularCount + (mRank < prefNum % numOfProcs ? mRank : prefNum % numOfProcs);
 	int size = mRank < prefNum % numOfProcs ? regularCount + 1 : regularCount;
-	int** prefs = malloc((*size) * sizeof(*prefs));
+	int** prefs = malloc(size * sizeof(*prefs));
 
 	fillPrefs(numOfProcs,citiesNum, mRank, size, firstIndex, prefs);
 	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
