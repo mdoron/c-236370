@@ -26,7 +26,7 @@ int getDist(int city1, int city2, int *xCoord, int* yCoord, int citiesNum);
 int ABS(int n);
 int find(int* pref, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 int findRec(int current, int curWeight, int* path, int* used, int* bestPath, int* xCoord, int* yCoord, int citiesNum);
-void calcMinEdges();
+void calcMinEdges(int * xCoord, int * yCoord, int citiesNum);
 int max(int arr[], int size, int* ind);
 
 void sort(int arr[], int size);
@@ -38,7 +38,7 @@ void masterInitialize(int pref[]);
 void workerInitialize();
 void createJob(int pref[], char isDone);
 int prefWeight(int pref[]);
-void calcDists();
+void calcDists(int *xCoord, int* yCoord, int citiesNum);
 
 const int root = 0;
 int* globalxCoord;
@@ -222,35 +222,31 @@ int prefWeight(int pref[]) {
 	return w;
 }
 
-int getDist(int i, int j) {
-	return ABS(globalxCoord[i] - globalxCoord[j]) + ABS(globalyCoord[i] - globalyCoord[j]);
-}
-
 int ABS(int n) {
 	return n >= 0 ? n : -n;
 }
 
-void calcDists() {
+void calcDists(int * xCoord, int * yCoord, int citiesNum) {
 	int i, j;
 	dists = (int**) malloc(globalCitiesNum *sizeof(int*));
 	for(i = 0; i < globalCitiesNum; ++i) {
 		dists[i] = (int*) malloc(globalCitiesNum * sizeof(int));
 		for(j = 0; j < globalCitiesNum; j++)
-			dists[i][j] = getDist(i,j);
+			dists[i][j] = getDist(i,j, xCoord, yCoord, citiesNum);
 	}
 }
 
-void calcMinEdges() {
+void calcMinEdges(int * xCoord, int * yCoord, int citiesNum) {
 	int i, j;
 	minNextEdgesWeight[0] = 0;
 	int curMaxInd = 0;
 	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
 	for(i = 1; i < globalCitiesNum; ++i)
-		minNextEdgesWeight[i] = getDist(0,i);
+		minNextEdgesWeight[i] = getDist(0,i, xCoord, yCoord, citiesNum);
 	curMax = max(minNextEdgesWeight, globalCitiesNum, &curMaxInd);
 	for(i = 1; i < globalCitiesNum; ++i)
 		for(j = i + 1; j < globalCitiesNum; ++j) {
-			int w = getDist(i,j);
+			int w = getDist(i,j, xCoord, yCoord, citiesNum);
 			if(w < curMax) {
 				minNextEdgesWeight[curMaxInd] = w;
 				curMax = max(minNextEdgesWeight, globalCitiesNum, &curMaxInd);
@@ -287,6 +283,13 @@ void sort(int arr[], int size) {
 		arr[i] = arr[min];
 		arr[min] = tmp;
 	}
+}
+
+
+//gets 2 cities and coordinates and citiesNum
+//returns the manhatten distance
+int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
+  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
 }
 
 /*
@@ -344,10 +347,10 @@ void allInitialize(int citiesNum, int* xCoord, int* yCoord) {
 	globalxCoord = xCoord;
 	globalyCoord = yCoord;
 	localBound = INT_MAX;
-	calcDists();
+	calcDists(int* xCoord, int* yCoord, int citiesNum);
 	int minEdges[citiesNum];
 	minNextEdgesWeight = minEdges;
-	calcMinEdges();
+	calcMinEdges(xCoord, yCoord, citiesNum);
 	job = (Job*) malloc(sizeof(Job));
 }
 
