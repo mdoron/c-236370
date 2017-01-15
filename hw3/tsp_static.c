@@ -12,7 +12,7 @@
 #define SERIAL_VAR 7
 
 int* minNowArr;
-int* minNextEdgesWeight;
+int* min_edges;
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
   return a>0? a : a*(-1);
@@ -62,47 +62,26 @@ void sort(int* arr, int len) {
 very very greedy
 //TODO: Doron, refactor this please
 */
+
 void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 	int i, j;
-	minNowArr[0] = 0;
+	min_edges[0] = 0;
 	int curMaxInd = 0;
-	int curMax = 0;		// max in the minNowArr array. will be replaced when finding lower weight
-	for(i = 1; i < citiesNum; ++i)
-		minNowArr[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	curMax = getMax(minNowArr, citiesNum, &curMaxInd);
-	for(i = 1; i < citiesNum; ++i)
-		for(j = i + 1; j < citiesNum; ++j) {
+	int curMax = 0;		// max in the min_edges array. will be replaced when finding lower weight
+	for(i = 1; i < citiesNum; i++)
+		min_edges[i] = getDist(0,i,xCoord,yCoord,citiesNum);
+	curMax = getMax(min_edges, citiesNum, &curMaxInd);
+	for(i = 1; i < citiesNum; i++)
+		for(j = i + 1; j < citiesNum; j++) {
 			int w = getDist(i,j,xCoord,yCoord,citiesNum);
 			if(w < curMax) {
-				minNowArr[curMaxInd] = w;
-				curMax = getMax(minNowArr, citiesNum, &curMaxInd);
+				min_edges[curMaxInd] = w;
+				curMax = getMax(min_edges, citiesNum, &curMaxInd);
 			}
 		}
-	sort(minNowArr, citiesNum);
+	sort(min_edges, citiesNum);
 	for(i = 2; i < citiesNum; ++i)
-		minNowArr[i] += minNowArr[i - 1];
-}
-
-
-void calcMinEdges2(int* xCoord,int* yCoord,int citiesNum) {
-	int i, j;
-	minNextEdgesWeight[0] = 0;
-	int curMaxInd = 0;
-	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
-	for(i = 1; i < citiesNum; ++i)
-		minNextEdgesWeight[i] = getDist(0,i,xCoord,yCoord,citiesNum);
-	curMax = getMax(minNextEdgesWeight, citiesNum, &curMaxInd);
-	for(i = 1; i < citiesNum; ++i)
-		for(j = i + 1; j < citiesNum; ++j) {
-			int w = getDist(i,j,xCoord,yCoord,citiesNum);
-			if(w < curMax) {
-				minNextEdgesWeight[curMaxInd] = w;
-				curMax = getMax(minNextEdgesWeight, citiesNum, &curMaxInd);
-			}
-		}
-	sort(minNextEdgesWeight, citiesNum);
-	for(i = 2; i < citiesNum; ++i)
-		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
+		min_edges[i] += min_edges[i - 1];
 }
 
 
@@ -127,7 +106,7 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + minNextEdgesWeight[citiesNum - current - 1] >= bestWeight)
+		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + min_edges[citiesNum - current - 1] >= bestWeight)
 			continue;
 		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
@@ -192,8 +171,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	int min[citiesNum];
 	minNowArr = min;
-	minNextEdgesWeight = min;
-	calcMinEdges2(xCoord,yCoord, citiesNum);
+	min_edges = min;
+	calcMinEdges(xCoord,yCoord, citiesNum);
 
   //using serial algorithm
   if(citiesNum < SERIAL_VAR) {
