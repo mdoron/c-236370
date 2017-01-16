@@ -104,13 +104,13 @@ void create_job(int prefix[], char is_done) {
 @param current - the current index we are working on - last one will be the stop
 @param path - current path
 @param curr_weight - curr path weight
-@param bestPath - will hold at each recursive call the best path
+@param min_path - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int find_rec(int current, int curr_weight, int* path, int* used, int* min_path,int* xCoord,int* yCoord,int citiesNum) {
 	if(current == citiesNum - 1) {
-		memcpy(bestPath, path, citiesNum * sizeof(int));
+		memcpy(min_path, path, citiesNum * sizeof(int));
 		return curr_weight + get_dist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
 	int min_weight = MAX_PATH;
@@ -125,7 +125,7 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,i
 		used[i] = 0;
 		if(weight < min_weight) {
 			min_weight = weight;
-			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
+			memcpy(min_path, receivedPath, citiesNum * sizeof(int));
 		}
 	}
 	return min_weight;
@@ -137,18 +137,18 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,i
 @param prefix - gets prefix of a path
 @param len - the prefix length
 @param initialWeight - prefix path weight
-@param bestPath - will hold at each recursive call the best path
+@param min_path - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int find(int* prefix, int len, int initialWeight, int* min_path,int* xCoord,int* yCoord,int citiesNum) {
 	int used[citiesNum];
   int path[citiesNum];
 	memset(used, 0, citiesNum * sizeof(int));
 	memcpy(path, prefix, len * sizeof(int));
 	for(int i = 0; i < len; ++i)
 		used[prefix[i]] = 1;
-	return find_rec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
+	return find_rec(len - 1, initialWeight, path, used, min_path,xCoord, yCoord,citiesNum);
 }
 
 
@@ -175,7 +175,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 	int min_weight = INT_MAX;
 	prev_bound = INT_MAX;
 	local_bound = INT_MAX;
-	int bestPath[citiesNum];
+	int min_path[citiesNum];
 	MPI_Datatype MPI_Job;
 	Job t;
 	build(&t,&MPI_Job);
@@ -214,7 +214,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 					MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
 					if(weight < min_weight) {
 						min_weight = weight;
-						memcpy(bestPath, path, citiesNum * sizeof(int));
+						memcpy(min_path, path, citiesNum * sizeof(int));
 						for(i = 1; i < procs_num; ++i)
 							MPI_Issend(&min_weight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
 					}
@@ -239,7 +239,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
 				if(weight < min_weight) {
 					min_weight = weight;
-					memcpy(bestPath, path, citiesNum * sizeof(int));
+					memcpy(min_path, path, citiesNum * sizeof(int));
 				}
 			}
 			else if(status.MPI_TAG == NOTHING_TO_REPORT) {
@@ -247,7 +247,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				++count;
 			}
 		}
-		memcpy(shortest_path, bestPath, citiesNum * sizeof(int));
+		memcpy(shortest_path, min_path, citiesNum * sizeof(int));
 	}
 	else {
 		LISTEN {
