@@ -197,7 +197,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				MPI_Issend(&info,1,MPI_CHAR,0,NOTHING_TO_REPORT,MPI_COMM_WORLD, &request);
 				break;
 			}
+			printf("111");
+			fflush(stdout);
 			weight = find(task->prefix, PREFIX_LENGTH, prefixWeight(task->prefix), path,xCoord,yCoord,citiesNum);
+			printf("222");
+			fflush(stdout);
 			if(weight < localBound) {
 				info = REPORT;
 				MPI_Ssend(&info,1,MPI_CHAR,0,REPORT,MPI_COMM_WORLD);
@@ -247,7 +251,7 @@ int prefixWeight(int prefix[]) {
 	for(i = 0; i < PREFIX_LENGTH - 1;++i)
 		w += dists[prefix[i]][prefix[i+1]];
 	return w;
-}
+}f
 
 
 int getMax(int arr[], int* ind, int size) {
