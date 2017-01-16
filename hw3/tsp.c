@@ -65,13 +65,14 @@ void swap(int* x, int* y) {
 
 //keep first node always 0
 int next_permut(int* prefix) {
-	printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
 	int i, j;
 	for(i = PREF_SIZE-2; i >= 1; --i)
 		if(prefix[i] < prefix[i+1])
 			break;
-	if(i < 1) // last permutation
+	if(i < 1) {// last permutation
+		printf("Last: %d %d %d\n", prefix[0], prefix[1], prefix[2]);
 		return 0;
+	}
 	for(j = PREF_SIZE-1; j > i; --j)
 		if(prefix[j] > prefix[i])
 			break;
@@ -79,6 +80,8 @@ int next_permut(int* prefix) {
 	++i;
 	for(j = PREF_SIZE-1; j > i; --j, ++i)
 		swap(prefix+i, prefix+j);
+
+	printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
 	return 1;
 }
 
