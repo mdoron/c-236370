@@ -11,8 +11,6 @@
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
 #define PREF_SIZE 4
-const int root = 0;
-//====end
 
 void fillPrefs(int procsNum,int citiesNum, int r, int size, int count, int** prefs);
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
@@ -165,19 +163,19 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	}
 	free(prefs);
 
-	/* collecting data from all processes into root process (0) */
+	/* collecting data from all processes into 0 process (0) */
 	int* weights;
 	int* paths;
-	if(rank == root) {
+	if(rank == 0) {
 		weights = malloc(sizeof(int) * procsNum);
 		paths = malloc(sizeof(int) * (procsNum * citiesNum));
 	}
 
-	// root gathers all the data from other processes to compute final solution
+	// 0 gathers all the data from other processes to compute final solution
 	// using collective communications as was requested in hw, and process 0 computes the solution, as was requested too
-	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, root, MPI_COMM_WORLD);
-	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, root, MPI_COMM_WORLD);
-	if(rank == root) {
+	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, 0, MPI_COMM_WORLD);
+	if(rank == 0) {
 		// find best path of all paths received
 		int best = 0;
 		for(int i = 0; i < procsNum; ++i)

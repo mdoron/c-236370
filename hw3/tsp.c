@@ -7,14 +7,12 @@
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
 #define PREF_SIZE 4
-const int root = 0;
-#define PREFIX_LENGTH 5
 #define TRUE 1
 #define FALSE 0
 #define LISTEN while(TRUE)
 
 typedef struct job_t {
-	int prefix[PREFIX_LENGTH];
+	int prefix[PREF_SIZE];
 	char isDone;
 } Job;
 
@@ -33,16 +31,14 @@ int nextPermut(int* prefix);
 void createJob(int prefix[], char isDone);
 
 
-int* globalxCoord;
-int* globalyCoord;
-int* minNextEdgesWeight;
-int globalCitiesNum;
-int** dists;
-int numProcs;
-int myRank;
+int* global_x;
+int* global_y;
+int global_cities_num;
+int procs_num;
+int my_rank;
 
-int prevBound;
-int localBound;
+int prev_bound;
+int local_bound;
 Job* job;
 
 enum Tag { ASK_FOR_JOB, REPORT, NOTHING_TO_REPORT, REPORT_WEIGHT, REPORT_PATH, NEW_JOB, NEW_BOUND };
@@ -58,7 +54,7 @@ void build(Job* data, MPI_Datatype* message_type_ptr) {
 	typelist[1] = MPI_CHAR;
 
 	// Specify the number of elements of each type
-	block_lengths[0] = PREFIX_LENGTH;
+	block_lengths[0] = PREF_SIZE;
 	block_lengths[1] = 1;
 
 	// Calculate the displacements of the members  relative to indata
@@ -79,14 +75,14 @@ void build(Job* data, MPI_Datatype* message_type_ptr) {
 // The dynamic parellel algorithm main function.
 int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 {
-	MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-	MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
-	if(numProcs == 1)
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
+	if(procs_num == 1)
 		exit(0);
 	int i;
 	int bestWeight = INT_MAX;
-	prevBound = INT_MAX;
-	localBound = INT_MAX;
+	prev_bound = INT_MAX;
+	local_bound = INT_MAX;
 	int bestPath[citiesNum];
 	MPI_Datatype MPI_Job;
 	Job t;
@@ -96,19 +92,17 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 	int path[citiesNum];
 	int weight;
 	
-	globalCitiesNum = citiesNum;
-	globalxCoord = xCoord;
-	globalyCoord = yCoord;
-	localBound = INT_MAX;
-	int minEdges[citiesNum];
-	minNextEdgesWeight = minEdges;
+	global_cities_num = citiesNum;
+	global_x = xCoord;
+	global_y = yCoord;
+	local_bound = INT_MAX;
 	job = (Job*) malloc(sizeof(Job));
 
 	MPI_Request request;
 	
-	if(myRank == 0) {
-		int prefix[PREFIX_LENGTH];
-		for(i = 0; i < PREFIX_LENGTH; i++) { 
+	if(my_rank == 0) {
+		int prefix[PREF_SIZE];
+		for(i = 0; i < PREF_SIZE; i++) { 
 			prefix[i] = i;
 		}
 		do {
@@ -129,17 +123,17 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					if(weight < bestWeight) {
 						bestWeight = weight;
 						memcpy(bestPath, path, citiesNum * sizeof(int));
-						for(i = 1; i < numProcs; ++i)
+						for(i = 1; i < procs_num; ++i)
 							MPI_Issend(&bestWeight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
 					}
 				}
 			}
 		} while(nextPermut(prefix));
 		createJob(prefix, TRUE);
-		for(i = 1; i < numProcs; ++i)
+		for(i = 1; i < procs_num; ++i)
 			MPI_Issend(job, 1, MPI_Job, i, NEW_JOB, MPI_COMM_WORLD, &request);
 		int count = 0;
-		while(count < numProcs - 1) {
+		while(count < procs_num - 1) {
 			MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			int source = status.MPI_SOURCE;
 			if(status.MPI_TAG == ASK_FOR_JOB) {
@@ -172,10 +166,10 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				if(status.MPI_TAG == NEW_JOB)
 					MPI_Recv(job,1,MPI_Job,0,NEW_JOB, MPI_COMM_WORLD, &status);
 				else if(status.MPI_TAG == NEW_BOUND) {
-					int prevBOund = localBound;
-					MPI_Recv(&localBound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &status);
-					if(prevBOund < localBound)
-						localBound = prevBound;
+					int prevBOund = local_bound;
+					MPI_Recv(&local_bound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &status);
+					if(prevBOund < local_bound)
+						local_bound = prev_bound;
 				}
 			} while(status.MPI_TAG != NEW_JOB);
 
@@ -185,8 +179,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 			}
 			int* a = job->prefix;
 			int b = prefixWeight(job->prefix, xCoord, yCoord, citiesNum);
-			weight = find(a, PREFIX_LENGTH, b, path,xCoord,yCoord,citiesNum);
-			if(weight < localBound) {
+			weight = find(a, PREF_SIZE, b, path,xCoord,yCoord,citiesNum);
+			if(weight < local_bound) {
 				info = REPORT;
 				MPI_Ssend(&info,1,MPI_CHAR,0,REPORT,MPI_COMM_WORLD);
 				MPI_Ssend(&weight,1,MPI_INT,0,REPORT_WEIGHT,MPI_COMM_WORLD);
@@ -209,17 +203,17 @@ void swap(int* x, int* y) {
 //keep first node always 0
 int nextPermut(int* prefix) {
 	int i, j;
-	for(i = PREFIX_LENGTH-2; i >= 1; --i)
+	for(i = PREF_SIZE-2; i >= 1; --i)
 		if(prefix[i] < prefix[i+1])
 			break;
 	if(i < 1) // last permutation
 		return 0;
-	for(j = PREFIX_LENGTH-1; j > i; --j)
+	for(j = PREF_SIZE-1; j > i; --j)
 		if(prefix[j] > prefix[i])
 			break;
 	swap(prefix+i, prefix+j);
 	++i;
-	for(j = PREFIX_LENGTH-1; j > i; --j, ++i)
+	for(j = PREF_SIZE-1; j > i; --j, ++i)
 		swap(prefix+i, prefix+j);
 	return 1;
 }
@@ -227,7 +221,7 @@ int nextPermut(int* prefix) {
 int prefixWeight(int prefix[],int* xCoord, int* yCoord, int citiesNum) {
 	int w = 0;
 	int i;
-	for(i = 0; i < PREFIX_LENGTH - 1;++i)
+	for(i = 0; i < PREF_SIZE - 1;++i)
 		w += getDist(prefix[i],prefix[i+1], xCoord, yCoord, citiesNum);
 	return w;
 }
@@ -260,7 +254,7 @@ void workerInitialize() {
 }
 
 void createJob(int prefix[], char isDone) {
-	memcpy(job->prefix, prefix, PREFIX_LENGTH * sizeof(int));
+	memcpy(job->prefix, prefix, PREF_SIZE * sizeof(int));
 	job->isDone = isDone;
 }
 
