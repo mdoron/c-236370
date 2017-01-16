@@ -251,7 +251,7 @@ int prefixWeight(int prefix[]) {
 	for(i = 0; i < PREFIX_LENGTH - 1;++i)
 		w += dists[prefix[i]][prefix[i+1]];
 	return w;
-}f
+}
 
 
 int getMax(int arr[], int* ind, int size) {
