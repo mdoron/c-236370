@@ -199,8 +199,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 			}
 			printf("111");
 			fflush(stdout);
-			weight = find(task->prefix, PREFIX_LENGTH, prefixWeight(task->prefix), path,xCoord,yCoord,citiesNum);
+			int* a = task->prefix;
+			int b = prefixWeight(task->prefix);
 			printf("222");
+			weight = find(a, PREFIX_LENGTH, b, path,xCoord,yCoord,citiesNum);
+			printf("333");
 			fflush(stdout);
 			if(weight < localBound) {
 				info = REPORT;
