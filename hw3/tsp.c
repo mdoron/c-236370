@@ -202,11 +202,10 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k)
 						continue;
+					prefix[0] = i;
+					prefix[1] = j;
+					prefix[2] = k;
 					do {
-						prefix[0] = i;
-						prefix[1] = j;
-						prefix[2] = k;
-
 						create_job(prefix, FALSE);
 						LISTEN {
 							MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
