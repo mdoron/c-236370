@@ -73,7 +73,7 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 	memset(inside, 0, citiesNum * sizeof(int));
 	memcpy(path, prefix, len * sizeof(int));
 	for(int i = 0; i < len; ++i)
-		used[prefix[i]] = 1;
+		inside[prefix[i]] = 1;
 	return findRec(len - 1, initialWeight, path, inside, bestPath,xCoord, yCoord,citiesNum);
 }
 
