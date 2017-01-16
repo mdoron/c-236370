@@ -214,11 +214,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		}
 		
 	}
-
-	for(i = 0; i < globalCitiesNum; i++) {
-		free(dists[i]);
-	}
-	free(dists);
 	free(task);
 
 	return bestWeight;
