@@ -129,8 +129,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					MPI_Issend(task, 1, MPI_Task, source, NEW_JOB, MPI_COMM_WORLD,&request);
 					break;
 				}
-				printf("^^^");
 				else if(status.MPI_TAG == REPORT) {
+					printf("^^^");
 					MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
 					MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
 					MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
