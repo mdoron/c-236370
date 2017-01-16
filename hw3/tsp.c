@@ -13,10 +13,10 @@ const int root = 0;
 #define FALSE 0
 #define LISTEN while(TRUE)
 
-typedef struct task_t {
+typedef struct job_t {
 	int prefix[PREFIX_LENGTH];
-	char finish;
-} Task;
+	char isDone;
+} Job;
 
 void fillPrefs(int procsNum,int citiesNum, int r, int size, int count, int** prefs);
 int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
@@ -24,15 +24,13 @@ int ABS(int n);
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
 
-int ABS(int n);
 int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
 void swap(int* x, int* y);
 int prefixWeight(int prefix[],int* xCoord, int* yCoord, int citiesNum) ;
 
-
 int nextPermut(int* prefix);
-void createTask(int prefix[], char finish);
+void createJob(int prefix[], char isDone);
 
 
 int* globalxCoord;
@@ -45,11 +43,11 @@ int myRank;
 
 int prevBound;
 int localBound;
-Task* task;
+Job* job;
 
 enum Tag { ASK_FOR_JOB, REPORT, NOTHING_TO_REPORT, REPORT_WEIGHT, REPORT_PATH, NEW_JOB, NEW_BOUND };
 
-void build(Task* data, MPI_Datatype* message_type_ptr) {
+void build(Job* data, MPI_Datatype* message_type_ptr) {
 	int block_lengths[2];
 	MPI_Aint displacements[2];
 	MPI_Datatype typelist[2];
@@ -66,7 +64,7 @@ void build(Task* data, MPI_Datatype* message_type_ptr) {
 	// Calculate the displacements of the members  relative to indata
 	MPI_Get_address(data, &addresses[0]);
 	MPI_Get_address(&(data->prefix), &addresses[1]);
-	MPI_Get_address(&(data->finish), &addresses[2]);
+	MPI_Get_address(&(data->isDone), &addresses[2]);
 
 	displacements[0] = addresses[1] - addresses[0];
 	displacements[1] = addresses[2] - addresses[0];
@@ -90,9 +88,9 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 	prevBound = INT_MAX;
 	localBound = INT_MAX;
 	int bestPath[citiesNum];
-	MPI_Datatype MPI_Task;
-	Task t;
-	build(&t,&MPI_Task);
+	MPI_Datatype MPI_Job;
+	Job t;
+	build(&t,&MPI_Job);
 	MPI_Status status;
 	char info;
 	int path[citiesNum];
@@ -104,25 +102,24 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 	localBound = INT_MAX;
 	int minEdges[citiesNum];
 	minNextEdgesWeight = minEdges;
-	task = (Task*) malloc(sizeof(Task));
+	job = (Job*) malloc(sizeof(Job));
 
 	MPI_Request request;
 	
 	if(myRank == 0) {
 		int prefix[PREFIX_LENGTH];
-		int i;
 		for(i = 0; i < PREFIX_LENGTH; i++) { 
 			prefix[i] = i;
 		}
 		do {
-			createTask(prefix, FALSE);
+			createJob(prefix, FALSE);
 			LISTEN {
 				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
 				if(status.MPI_TAG == ASK_FOR_JOB) {
 					// check if need irecv
 					MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
-					MPI_Issend(task, 1, MPI_Task, source, NEW_JOB, MPI_COMM_WORLD,&request);
+					MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD,&request);
 					break;
 				}
 				else if(status.MPI_TAG == REPORT) {
@@ -138,16 +135,16 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				}
 			}
 		} while(nextPermut(prefix));
-		createTask(prefix, TRUE);
+		createJob(prefix, TRUE);
 		for(i = 1; i < numProcs; ++i)
-			MPI_Issend(task, 1, MPI_Task, i, NEW_JOB, MPI_COMM_WORLD, &request);
+			MPI_Issend(job, 1, MPI_Job, i, NEW_JOB, MPI_COMM_WORLD, &request);
 		int count = 0;
 		while(count < numProcs - 1) {
 			MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			int source = status.MPI_SOURCE;
 			if(status.MPI_TAG == ASK_FOR_JOB) {
 				MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
-				MPI_Issend(task, 1, MPI_Task, source, NEW_JOB, MPI_COMM_WORLD, &request);
+				MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD, &request);
 				continue;
 			}
 			else if(status.MPI_TAG == REPORT) {
@@ -173,7 +170,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 			do {
 				MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				if(status.MPI_TAG == NEW_JOB)
-					MPI_Recv(task,1,MPI_Task,0,NEW_JOB, MPI_COMM_WORLD, &status);
+					MPI_Recv(job,1,MPI_Job,0,NEW_JOB, MPI_COMM_WORLD, &status);
 				else if(status.MPI_TAG == NEW_BOUND) {
 					int prevBOund = localBound;
 					MPI_Recv(&localBound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &status);
@@ -182,12 +179,12 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				}
 			} while(status.MPI_TAG != NEW_JOB);
 
-			if(task->finish) {
+			if(job->isDone) {
 				MPI_Issend(&info,1,MPI_CHAR,0,NOTHING_TO_REPORT,MPI_COMM_WORLD, &request);
 				break;
 			}
-			int* a = task->prefix;
-			int b = prefixWeight(task->prefix, xCoord, yCoord, citiesNum);
+			int* a = job->prefix;
+			int b = prefixWeight(job->prefix, xCoord, yCoord, citiesNum);
 			weight = find(a, PREFIX_LENGTH, b, path,xCoord,yCoord,citiesNum);
 			if(weight < localBound) {
 				info = REPORT;
@@ -198,7 +195,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		}
 		
 	}
-	free(task);
+	free(job);
 
 	return bestWeight;
 }
@@ -262,9 +259,9 @@ void workerInitialize() {
 
 }
 
-void createTask(int prefix[], char finish) {
-	memcpy(task->prefix, prefix, PREFIX_LENGTH * sizeof(int));
-	task->finish = finish;
+void createJob(int prefix[], char isDone) {
+	memcpy(job->prefix, prefix, PREFIX_LENGTH * sizeof(int));
+	job->isDone = isDone;
 }
 
 
