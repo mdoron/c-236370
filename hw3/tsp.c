@@ -228,8 +228,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 										MPI_Issend(&min_weight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
 								}
 							}
-						} while(next_permut(prefix));
-					}
+						} 
+					} while(next_permut(prefix));
 				}
 			}
 		}
