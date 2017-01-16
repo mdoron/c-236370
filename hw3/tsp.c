@@ -5,6 +5,10 @@
 #include <limits.h>
 
 
+#define MAX_PATH 10000000
+#define SERIAL_VAR 7
+#define PREF_SIZE 4
+const int root = 0;
 #define PREFIX_LENGTH 5
 #define TRUE 1
 #define FALSE 0
@@ -194,8 +198,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		}
 		
 	}
-	
-	int i;
+
 	for(i = 0; i < globalCitiesNum; i++) {
 		free(dists[i]);
 	}
