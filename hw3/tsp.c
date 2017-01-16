@@ -196,44 +196,44 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 		int prefix[PREF_SIZE];
 		int i=0, j=0, k=0;
 		for(i = 0; i < citiesNum; i++) { 
-			for (int j = 0; j < citiesNum; j++) {
+			for (int j = i; j < citiesNum; j++) {
 				if (i == j) 
 					continue;
-
-				for (int k = 0; k < citiesNum; k++) {
+				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k)
 						continue;
-		// do {
-					prefix[0] = i;
-					prefix[1] = j;
-					prefix[2] = k;
+					do {
+						prefix[0] = i;
+						prefix[1] = j;
+						prefix[2] = k;
 
-					create_job(prefix, FALSE);
-					LISTEN {
-						MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-						int source = status.MPI_SOURCE;
-						if(status.MPI_TAG == ASK_FOR_JOB) {
-							// check if need irecv
-							MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
-							MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD,&request);
-							break;
-						}
-						else if(status.MPI_TAG == REPORT) {
-							MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
-							MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
-							MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
-							if(weight < min_weight) {
-								min_weight = weight;
-								memcpy(min_path, path, citiesNum * sizeof(int));
-								for(i = 1; i < procs_num; ++i)
-									MPI_Issend(&min_weight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
+						create_job(prefix, FALSE);
+						LISTEN {
+							MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+							int source = status.MPI_SOURCE;
+							if(status.MPI_TAG == ASK_FOR_JOB) {
+								// check if need irecv
+								MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
+								MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD,&request);
+								break;
 							}
-						}
+							else if(status.MPI_TAG == REPORT) {
+								MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
+								MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
+								MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
+								if(weight < min_weight) {
+									min_weight = weight;
+									memcpy(min_path, path, citiesNum * sizeof(int));
+									for(i = 1; i < procs_num; ++i)
+										MPI_Issend(&min_weight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
+								}
+							}
+						} while(next_permut(prefix));
 					}
 				}
 			}
 		}
-		// } while(next_permut(prefix));
+		// 
 		create_job(prefix, TRUE);
 		for(i = 1; i < procs_num; ++i)
 			MPI_Issend(job, 1, MPI_Job, i, NEW_JOB, MPI_COMM_WORLD, &request);
