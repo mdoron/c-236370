@@ -12,12 +12,6 @@
 #define SERIAL_VAR 7
 #define PREF_SIZE 4
 
-void fillPrefs(int procsNum,int citiesNum, int r, int size, int count, int** prefs);
-int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
-int ABS(int n);
-int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-
 
 //normal ABSolute function as implemented in math.h
 int ABS(int a) {
@@ -41,23 +35,23 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
 @return - will return the best path's weight
 */
 int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	if(current == citiesNum - 1) {
+	int res[citiesNum];
+	int bestWeight = MAX_PATH;
+	if(citiesNum - 1 <= current) {
 		memcpy(bestPath, path, citiesNum * sizeof(int));
 		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
-	int bestWeight = MAX_PATH;
-	int receivedPath[citiesNum];
 	for(int i = 0; i < citiesNum; ++i) {
 		if(inside[i] == 1)
 			continue;
 		int check_now = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		inside[i] = 1;
-		int weight = findRec(current + 1, check_now, path, inside, receivedPath,xCoord,yCoord,citiesNum);
+		int weight = findRec(current + 1, check_now, path, inside, res,xCoord,yCoord,citiesNum);
 		inside[i] = 0;
 		if(weight < bestWeight) {
 			bestWeight = weight;
-			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
+			memcpy(bestPath, res, citiesNum * sizeof(int));
 		}
 	}
 	return bestWeight;
@@ -74,13 +68,13 @@ int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,in
 @return - will return the best path's weight
 */
 int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	int used[citiesNum];
+	int inside[citiesNum];
   int path[citiesNum];
-	memset(used, 0, citiesNum * sizeof(int));
+	memset(inside, 0, citiesNum * sizeof(int));
 	memcpy(path, prefix, len * sizeof(int));
 	for(int i = 0; i < len; ++i)
 		used[prefix[i]] = 1;
-	return findRec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
+	return findRec(len - 1, initialWeight, path, inside, bestPath,xCoord, yCoord,citiesNum);
 }
 
 
