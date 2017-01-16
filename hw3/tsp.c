@@ -28,7 +28,7 @@ int ABS(int n);
 int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
 void swap(int* x, int* y);
-int prefixWeight(int prefix[]);
+int prefixWeight(int prefix[],int* xCoord, int* yCoord, int citiesNum) ;
 
 
 int nextPermut(int* prefix);
@@ -200,7 +200,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 			printf("111");
 			fflush(stdout);
 			int* a = task->prefix;
-			int b = prefixWeight(task->prefix);
+			int b = prefixWeight(task->prefix, xCoord, yCoord, citiesNum);
 			printf("222");
 			weight = find(a, PREFIX_LENGTH, b, path,xCoord,yCoord,citiesNum);
 			printf("333");
@@ -248,11 +248,11 @@ int nextPermut(int* prefix) {
 	return 1;
 }
 
-int prefixWeight(int prefix[]) {
+int prefixWeight(int prefix[],int* xCoord, int* yCoord, int citiesNum) {
 	int w = 0;
 	int i;
 	for(i = 0; i < PREFIX_LENGTH - 1;++i)
-		w += dists[prefix[i]][prefix[i+1]];
+		w += getDist(prefix[i],prefix[i+1], xCoord, yCoord, citiesNum);
 	return w;
 }
 
