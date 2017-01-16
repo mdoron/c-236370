@@ -5,10 +5,6 @@
 #include <limits.h>
 
 
-#define MAX_PATH 10000000
-#define SERIAL_VAR 7
-#define PREF_SIZE 4
-const int root = 0;
 #define PREFIX_LENGTH 5
 #define TRUE 1
 #define FALSE 0
@@ -30,6 +26,7 @@ int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
 void swap(int* x, int* y);
 int prefixWeight(int prefix[]);
+
 
 int nextPermut(int* prefix);
 void createTask(int prefix[], char finish);
@@ -108,6 +105,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 
 	MPI_Request request;
 	
+	printf("@@@");
 	
 	if(myRank == 0) {
 		int prefix[PREFIX_LENGTH];
@@ -115,10 +113,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		for(i = 0; i < PREFIX_LENGTH; i++) { 
 			prefix[i] = i;
 		}
-
+		printf("!!!");
 		do {
 			createTask(prefix, FALSE);
 			LISTEN {
+				printf("###");
 				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
 				if(status.MPI_TAG == ASK_FOR_JOB) {
@@ -127,6 +126,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					MPI_Issend(task, 1, MPI_Task, source, NEW_JOB, MPI_COMM_WORLD,&request);
 					break;
 				}
+				printf("^^^");
 				else if(status.MPI_TAG == REPORT) {
 					MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
 					MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
@@ -198,7 +198,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		}
 		
 	}
-
+	
+	int i;
 	for(i = 0; i < globalCitiesNum; i++) {
 		free(dists[i]);
 	}
