@@ -10,7 +10,7 @@
 
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
-#define PREF_SIZE 3
+#define PREF_SIZE 4
 const int root = 0;
 //====end
 

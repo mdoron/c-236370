@@ -8,29 +8,26 @@
 #define PREFIX_LENGTH 5
 #define TRUE 1
 #define FALSE 0
+#define LISTEN while(TRUE)
 
 typedef struct task_t {
 	int prefix[PREFIX_LENGTH];
 	char finish;
 } Task;
 
-int weightOf(int i, int j);
-int abs(int n);
-int solve(int prefix[], int len, int initialWeight, int* bestPath);
-int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath);
-void calcMinEdges();
+void fillPrefs(int procsNum,int citiesNum, int r, int size, int count, int** prefs);
+int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
+int ABS(int n);
+int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
+
+int ABS(int n);
 int getMax(int arr[], int* ind, int size);
 void sort(int arr[], int size);
 void swap(int* x, int* y);
 int prefixWeight(int prefix[]);
-void calcDists();
-
 
 int nextPermut(int* prefix);
-void allInitialize(int citiesNum, int* xCoord, int* yCoord);
-void allDestruct();
-void masterInitialize(int prefix[]);
-void workerInitialize();
 void createTask(int prefix[], char finish);
 
 
@@ -96,17 +93,28 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 	char info;
 	int path[citiesNum];
 	int weight;
-	allInitialize(citiesNum, xCoord, yCoord);
+	
+	globalCitiesNum = citiesNum;
+	globalxCoord = xCoord;
+	globalyCoord = yCoord;
+	localBound = INT_MAX;
+	int minEdges[citiesNum];
+	minNextEdgesWeight = minEdges;
+	task = (Task*) malloc(sizeof(Task));
+
 	MPI_Request request;
 	
 	
 	if(myRank == 0) {
 		int prefix[PREFIX_LENGTH];
-		masterInitialize(prefix);
+		int i;
+		for(i = 0; i < PREFIX_LENGTH; i++) { 
+			prefix[i] = i;
+		}
 
 		do {
 			createTask(prefix, FALSE);
-			while(TRUE) {
+			LISTEN {
 				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
 				if(status.MPI_TAG == ASK_FOR_JOB) {
@@ -157,8 +165,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
 	}
 	else {
-		workerInitialize();
-		while(TRUE) {
+		LISTEN {
 			info = ASK_FOR_JOB;
 			MPI_Issend(&info,1,MPI_CHAR,0,ASK_FOR_JOB,MPI_COMM_WORLD, &request);
 			do {
@@ -177,7 +184,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				MPI_Issend(&info,1,MPI_CHAR,0,NOTHING_TO_REPORT,MPI_COMM_WORLD, &request);
 				break;
 			}
-			weight = solve(task->prefix, PREFIX_LENGTH, prefixWeight(task->prefix), path);
+			weight = find(task->prefix, PREFIX_LENGTH, prefixWeight(task->prefix), path,xCoord,yCoord,citiesNum);
 			if(weight < localBound) {
 				info = REPORT;
 				MPI_Ssend(&info,1,MPI_CHAR,0,REPORT,MPI_COMM_WORLD);
@@ -187,7 +194,14 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		}
 		
 	}
-	allDestruct();
+	
+	int i;
+	for(i = 0; i < globalCitiesNum; i++) {
+		free(dists[i]);
+	}
+	free(dists);
+	free(task);
+
 	return bestWeight;
 }
 
@@ -223,49 +237,6 @@ int prefixWeight(int prefix[]) {
 	return w;
 }
 
-int weightOf(int i, int j) {
-	return abs(globalxCoord[i] - globalxCoord[j]) + abs(globalyCoord[i] - globalyCoord[j]);
-}
-
-int abs(int n) {
-	return n >= 0 ? n : -n;
-}
-
-void calcDists() {
-	int i, j;
-	dists = (int**) malloc(globalCitiesNum *sizeof(int*));
-	for(i = 0; i < globalCitiesNum; ++i) {
-		dists[i] = (int*) malloc(globalCitiesNum * sizeof(int));
-		for(j = 0; j < globalCitiesNum; j++)
-			dists[i][j] = weightOf(i,j);
-	}
-}
-
-void calcMinEdges() {
-	int i, j;
-	minNextEdgesWeight[0] = 0;
-	int curMaxInd = 0;
-	int curMax = 0;		// max in the minNextEdgesWeight array. will be replaced when finding lower weight
-	for(i = 1; i < globalCitiesNum; ++i)
-		minNextEdgesWeight[i] = weightOf(0,i);
-	curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
-	for(i = 1; i < globalCitiesNum; ++i)
-		for(j = i + 1; j < globalCitiesNum; ++j) {
-			int w = weightOf(i,j);
-			if(w < curMax) {
-				minNextEdgesWeight[curMaxInd] = w;
-				curMax = getMax(minNextEdgesWeight, &curMaxInd, globalCitiesNum);
-			}
-		}
-	int min = minNextEdgesWeight[1];
-	for(i = 2; i < globalCitiesNum; ++i)
-		if(minNextEdgesWeight[i] < min)
-			min = minNextEdgesWeight[i];
-	minNextEdgesWeight[curMaxInd] = min;
-	sort(minNextEdgesWeight, globalCitiesNum);
-	for(i = 2; i < globalCitiesNum; ++i)
-		minNextEdgesWeight[i] += minNextEdgesWeight[i - 1];
-}
 
 int getMax(int arr[], int* ind, int size) {
 	int i;
@@ -289,71 +260,6 @@ void sort(int arr[], int size) {
 	}
 }
 
-int solve(int prefix[], int len, int initialWeight, int* bestPath) {
-	int used[globalCitiesNum];
-	memset(used, FALSE, globalCitiesNum * sizeof(int));
-	int path[globalCitiesNum];
-	memcpy(path, prefix, len * sizeof(int));
-	int i;
-	for(i = 0; i < len; ++i)
-		used[prefix[i]] = TRUE;
-	return recurseSolve(len - 1, initialWeight, path, used, bestPath);
-}
-
-int recurseSolve(int curInd, int curWeight, int* path, int* used, int* bestPath) {
-	if(curInd == globalCitiesNum - 1) {
-		//adding edge from last city to first city to close the cycle
-		memcpy(bestPath, path, globalCitiesNum * sizeof(int));
-		return curWeight + weightOf(path[0],path[globalCitiesNum - 1]);
-	}
-
-	int bestWeight = INT_MAX;
-	int receivedPath[globalCitiesNum];
-	int i;
-	for(i = 0; i < globalCitiesNum; ++i) {
-		if(used[i] == TRUE)
-			continue;
-		if(curWeight + weightOf(path[curInd],i) + minNextEdgesWeight[globalCitiesNum - curInd - 1] >= localBound)	//bestWeight before
-			continue;
-		int ww = curWeight + weightOf(path[curInd],i);
-		path[curInd + 1] = i;
-		used[i] = TRUE;
-		int weight = recurseSolve(curInd + 1, ww, path, used, receivedPath);
-		used[i] = FALSE;
-		if(weight < bestWeight) {
-			bestWeight = weight;
-			memcpy(bestPath, receivedPath, globalCitiesNum * sizeof(int));
-		}
-	}
-	return bestWeight;
-}
-
-void allInitialize(int citiesNum, int* xCoord, int* yCoord) {
-	globalCitiesNum = citiesNum;
-	globalxCoord = xCoord;
-	globalyCoord = yCoord;
-	localBound = INT_MAX;
-	calcDists();
-	int minEdges[citiesNum];
-	minNextEdgesWeight = minEdges;
-	calcMinEdges();
-	task = (Task*) malloc(sizeof(Task));
-}
-
-void allDestruct() {
-	int i;
-	for(i = 0; i < globalCitiesNum; ++i)
-		free(dists[i]);
-	free(dists);
-	free(task);
-}
-
-void masterInitialize(int prefix[]) {
-	int i;
-	for(i = 0; i < PREFIX_LENGTH; ++i)
-		prefix[i] = i;
-}
-
 void workerInitialize() {
 
 }
@@ -361,4 +267,85 @@ void workerInitialize() {
 void createTask(int prefix[], char finish) {
 	memcpy(task->prefix, prefix, PREFIX_LENGTH * sizeof(int));
 	task->finish = finish;
+}
+
+
+
+//===================================================================
+//===================================================================
+
+int ABS(int a) {
+  return a>0 ? a : a*(-1);
+}
+
+//gets 2 cities and coordinates and citiesNum
+//returns the manhatten distance
+int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
+  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
+}
+
+
+/*
+@param current - the current index we are working on - last one will be the stop
+@param path - current path
+@param curWeight - curr path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+	if(current == citiesNum - 1) {
+		memcpy(bestPath, path, citiesNum * sizeof(int));
+		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
+	}
+	int bestWeight = MAX_PATH;
+	int receivedPath[citiesNum];
+	for(int i = 0; i < citiesNum; ++i) {
+		if(used[i] == 1)
+			continue;
+		int check_now = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
+		path[current + 1] = i;
+		used[i] = 1;
+		int weight = findRec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
+		used[i] = 0;
+		if(weight < bestWeight) {
+			bestWeight = weight;
+			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
+		}
+	}
+	return bestWeight;
+}
+
+
+
+/*
+@param prefix - gets prefix of a path
+@param len - the prefix length
+@param initialWeight - prefix path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+	int used[citiesNum];
+  int path[citiesNum];
+	memset(used, 0, citiesNum * sizeof(int));
+	memcpy(path, prefix, len * sizeof(int));
+	for(int i = 0; i < len; ++i)
+		used[prefix[i]] = 1;
+	return findRec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
+}
+
+
+// returns all path prefixes the process have to solve, according to it's rank and number of processes
+void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
+	int i,j;
+	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
+		prefs[j] = malloc(PREF_SIZE * sizeof(int));
+		prefs[j][0] = 0;	// all prefixes start at city 0
+		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
+		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
+		if(prefs[j][1] <= prefs[j][2])
+			++prefs[j][2];
+	}
 }
