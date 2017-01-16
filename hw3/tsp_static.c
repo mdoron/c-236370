@@ -30,15 +30,15 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
 @param path - current path
 @param curWeight - curr path weight
 @param inside - the already used cities
-@param bestPath - will hold at each recursive call the best path
+@param resPath - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int findRec(int current, int curWeight, int* path, int* inside, int* resPath,int* xCoord,int* yCoord,int citiesNum) {
 	int res[citiesNum];
-	int bestWeight = MAX_PATH;
+	int minWeight = MAX_PATH;
 	if(citiesNum - 1 <= current) {
-		memcpy(bestPath, path, citiesNum * sizeof(int));
+		memcpy(resPath, path, citiesNum * sizeof(int));
 		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
 	for(int i = 0; i < citiesNum; ++i) {
@@ -47,14 +47,14 @@ int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,in
 		int check_now = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		inside[i] = 1;
-		int weight = findRec(current + 1, check_now, path, inside, res,xCoord,yCoord,citiesNum);
+		int wNow = findRec(current + 1, check_now, path, inside, res,xCoord,yCoord,citiesNum);
 		inside[i] = 0;
-		if(weight < bestWeight) {
-			bestWeight = weight;
-			memcpy(bestPath, res, citiesNum * sizeof(int));
+		if(wNow < minWeight) {
+			minWeight = wNow;
+			memcpy(resPath, res, citiesNum * sizeof(int));
 		}
 	}
-	return bestWeight;
+	return minWeight;
 }
 
 
@@ -63,18 +63,18 @@ int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,in
 @param prefix - gets prefix of a path
 @param len - the prefix length
 @param initialWeight - prefix path weight
-@param bestPath - will hold at each recursive call the best path
+@param resPath - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int find(int* prefix, int len, int initialWeight, int* resPath,int* xCoord,int* yCoord,int citiesNum) {
 	int inside[citiesNum];
   int path[citiesNum];
 	memset(inside, 0, citiesNum * sizeof(int));
 	memcpy(path, prefix, len * sizeof(int));
 	for(int i = 0; i < len; ++i)
 		inside[prefix[i]] = 1;
-	return findRec(len - 1, initialWeight, path, inside, bestPath,xCoord, yCoord,citiesNum);
+	return findRec(len - 1, initialWeight, path, inside, resPath,xCoord, yCoord,citiesNum);
 }
 
 
