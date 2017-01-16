@@ -146,6 +146,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				}
 			}
 		} while(nextPermut(prefix));
+		printf("===");
+		fflush(stdout);
 		createTask(prefix, TRUE);
 		for(i = 1; i < numProcs; ++i)
 			MPI_Issend(task, 1, MPI_Task, i, NEW_JOB, MPI_COMM_WORLD, &request);
