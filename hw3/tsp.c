@@ -145,6 +145,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					}
 				}
 			}
+			printf("()()()");
 		} while(nextPermut(prefix));
 		printf("===");
 		fflush(stdout);
