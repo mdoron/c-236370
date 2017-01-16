@@ -35,11 +35,12 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
 @param current - the current index we are working on - last one will be the stop
 @param path - current path
 @param curWeight - curr path weight
+@param inside - the already used cities
 @param bestPath - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int findRec(int current, int curWeight, int* path, int* inside, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
 	if(current == citiesNum - 1) {
 		memcpy(bestPath, path, citiesNum * sizeof(int));
 		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
@@ -47,13 +48,13 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 	int bestWeight = MAX_PATH;
 	int receivedPath[citiesNum];
 	for(int i = 0; i < citiesNum; ++i) {
-		if(used[i] == 1)
+		if(inside[i] == 1)
 			continue;
 		int check_now = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
-		used[i] = 1;
-		int weight = findRec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
-		used[i] = 0;
+		inside[i] = 1;
+		int weight = findRec(current + 1, check_now, path, inside, receivedPath,xCoord,yCoord,citiesNum);
+		inside[i] = 0;
 		if(weight < bestWeight) {
 			bestWeight = weight;
 			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
@@ -83,16 +84,17 @@ int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int*
 }
 
 
-// returns all path prefixes the process have to solve, according to it's rank and number of processes
 void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
-	int i,j;
-	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
-		prefs[j] = malloc(PREF_SIZE * sizeof(int));
-		prefs[j][0] = 0;	// all prefixes start at city 0
-		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
-		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
-		if(prefs[j][1] <= prefs[j][2])
-			++prefs[j][2];
+	int prefCol = 0;
+	for(int i = firstIndex; i < firstIndex + size; i++) {
+		prefs[prefCol] = malloc(PREF_SIZE * sizeof(int));
+		prefs[prefCol][0] = 0;
+		prefs[prefCol][2] = 1 + i % (citiesNum - 3);
+		prefs[prefCol][1] = 1 + i / (citiesNum - 2);
+		if(prefs[prefCol][1] <= prefs[prefCol][2]) {
+			prefs[prefCol][2]++;
+		}
+		prefCol++;
 	}
 }
 
@@ -108,8 +110,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	MPI_Status status;
 
   if (rank==0){
-		//"master" part - send variables to other processes
-		/*sending*/
 		for(int i=1;i<procsNum;i++){
 			MPI_Bsend(&citiesNum,1,MPI_INT,i,0,MPI_COMM_WORLD);
 			MPI_Bsend(xCoord,citiesNum,MPI_INT,i,1,MPI_COMM_WORLD);
@@ -118,16 +118,12 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 	}
 	else{
 		MPI_Recv(&citiesNum,1,MPI_INT,0,0,MPI_COMM_WORLD,&status);
-		// xCoord=malloc(sizeof(int)*citiesNum);
-		// yCoord=malloc(sizeof(int)*citiesNum);
 		MPI_Recv(xCoord,citiesNum,MPI_INT,0,1,MPI_COMM_WORLD,&status);
 		MPI_Recv(yCoord,citiesNum,MPI_INT,0,2,MPI_COMM_WORLD,&status);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 
-  //using serial algorithm
   if(citiesNum < SERIAL_VAR) {
-    //for each process other then "master"
     if(rank > 0)
       return MAX_PATH;
     int prefix[citiesNum];
@@ -137,22 +133,18 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
     memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
     return minWeight;
   }
-	//============TODO: Doron, refactor HARD from here:
-	/* compute best path at each process */
 
-	// returns path prefixes that the process have to compute, according to it's rank and total num of processes
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
-	int count = prefNum / procsNum; // the remainder is given to the #remainder first processes
+	int count = prefNum / procsNum;
 	int firstIndex = rank * count + (rank < prefNum % procsNum ? rank : prefNum % procsNum);
 	int size = rank < prefNum % procsNum ? count + 1 : count;
 	int** prefs = malloc(size * sizeof(*prefs));
 
 	fillPrefs(procsNum,citiesNum, rank, size, firstIndex, prefs);
-	int minWeight = MAX_PATH; // stores the weight of the best path found until some point
-	int bestPath[citiesNum]; // stores best path of all paths found until some point
-	int path[citiesNum]; // stores the best path with one of the prefixes
+	int minWeight = MAX_PATH;
+	int bestPath[citiesNum];
+	int path[citiesNum];
 	for(int i = 0; i < size; ++i) {
-		// weight of the prefix
 		int dist = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
 		int weight = find(prefs[i], PREF_SIZE, dist, path,xCoord,yCoord,citiesNum);
 		free(prefs[i]);
@@ -162,33 +154,26 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		}
 	}
 	free(prefs);
-
-	/* collecting data from all processes into 0 process (0) */
 	int* weights;
 	int* paths;
 	if(rank == 0) {
 		weights = malloc(sizeof(int) * procsNum);
 		paths = malloc(sizeof(int) * (procsNum * citiesNum));
 	}
-
-	// 0 gathers all the data from other processes to compute final solution
-	// using collective communications as was requested in hw, and process 0 computes the solution, as was requested too
 	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, 0, MPI_COMM_WORLD);
 	if(rank == 0) {
-		// find best path of all paths received
 		int best = 0;
 		for(int i = 0; i < procsNum; ++i)
 			if(weights[i] < minWeight) {
 				minWeight = weights[i];
 				best = i;
 			}
-		// copy the best path to output
 		memcpy(shortestPath, paths + best*citiesNum, citiesNum * sizeof(int));
 		free(weights);
 		free(paths);
 	}
 
 	return minWeight;
-	//=====================END
+
 }
