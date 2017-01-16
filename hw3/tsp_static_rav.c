@@ -88,15 +88,15 @@ void calcMinEdges(int* xCoord,int* yCoord,int citiesNum) {
 /*
 @param current - the current index we are working on - last one will be the stop
 @param path - current path
-@param curWeight - curr path weight
+@param curr_weight - curr path weight
 @param bestPath - will hold at each recursive call the best path
 @param xCoord,yCoord,citiesNum - as always
 @return - will return the best path's weight
 */
-int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+int findRec(int current, int curr_weight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
 	if(current == citiesNum - 1) {
 		memcpy(bestPath, path, citiesNum * sizeof(int));
-		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
+		return curr_weight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
 	int bestWeight = MAX_PATH;
 	int receivedPath[citiesNum];
@@ -106,9 +106,9 @@ int findRec(int current, int curWeight, int* path, int* used, int* bestPath,int*
 		// check that the minimum weight that the path would have is not greater than minimum weight found till now.
 		// we check that the weight of the path until now including the next city,
 		//		plus the minimum weight that the left edges would have is lower than minimum weight till now
-		if(curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum) + min_edges[citiesNum - current - 1] >= bestWeight)
+		if(curr_weight + getDist(path[current],i,xCoord,yCoord,citiesNum) + min_edges[citiesNum - current - 1] >= bestWeight)
 			continue;
-		int ww = curWeight + getDist(path[current],i,xCoord,yCoord,citiesNum);
+		int ww = curr_weight + getDist(path[current],i,xCoord,yCoord,citiesNum);
 		path[current + 1] = i;
 		used[i] = 1;
 		int weight = findRec(current + 1, ww, path, used, receivedPath,xCoord,yCoord,citiesNum);
