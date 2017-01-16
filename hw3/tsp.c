@@ -202,7 +202,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 		
 	}
 	
-	int i;
 	for(i = 0; i < globalCitiesNum; i++) {
 		free(dists[i]);
 	}
