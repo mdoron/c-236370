@@ -51,6 +51,10 @@ void build(Job* data, MPI_Datatype* message_type_ptr) {
 	MPI_Type_commit(message_type_ptr);
 }
 
+int ABS(int a) {
+  return a>0 ? a : a*(-1);
+}
+
 // The dynamic parellel algorithm main function.
 
 void swap(int* x, int* y) {
@@ -95,11 +99,6 @@ void create_job(int prefix[], char is_done) {
 	memcpy(job->prefix, prefix, PREF_SIZE * sizeof(int));
 	job->is_done = is_done;
 }
-
-int ABS(int a) {
-  return a>0 ? a : a*(-1);
-}
-
 
 /*
 @param current - the current index we are working on - last one will be the stop
