@@ -109,7 +109,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 	MPI_Request request;
 	
 	printf("@@@");
-	fflush();
+	fflush(stdout);
 	
 	if(myRank == 0) {
 		int prefix[PREFIX_LENGTH];
@@ -122,7 +122,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 			createTask(prefix, FALSE);
 			LISTEN {
 				printf("###");
-				fflush();
+				fflush(stdout);
 				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
 				if(status.MPI_TAG == ASK_FOR_JOB) {
@@ -133,7 +133,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				}
 				else if(status.MPI_TAG == REPORT) {
 					printf("^^^");
-					fflush();
+					fflush(stdout);
 					MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
 					MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
 					MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
