@@ -16,21 +16,6 @@ typedef struct job_t {
 	char is_done;
 } Job;
 
-void fill_prefs(int procs_num,int citiesNum, int r, int size, int count, int** prefs);
-int get_dist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum);
-int ABS(int n);
-int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum);
-
-int get_max(int arr[], int* ind, int size);
-void sort(int arr[], int size);
-void swap(int* x, int* y);
-int prefix_weight(int prefix[],int* xCoord, int* yCoord, int citiesNum) ;
-
-int next_permut(int* prefix);
-void create_job(int prefix[], char is_done);
-
-
 int* global_x, global_y;
 int global_cities_num, procs_num, my_rank, prev_bound, local_bound;
 Job* job;
@@ -67,6 +52,120 @@ void build(Job* data, MPI_Datatype* message_type_ptr) {
 }
 
 // The dynamic parellel algorithm main function.
+
+void swap(int* x, int* y) {
+	int tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
+
+//keep first node always 0
+int next_permut(int* prefix) {
+	int i, j;
+	for(i = PREF_SIZE-2; i >= 1; --i)
+		if(prefix[i] < prefix[i+1])
+			break;
+	if(i < 1) // last permutation
+		return 0;
+	for(j = PREF_SIZE-1; j > i; --j)
+		if(prefix[j] > prefix[i])
+			break;
+	swap(prefix+i, prefix+j);
+	++i;
+	for(j = PREF_SIZE-1; j > i; --j, ++i)
+		swap(prefix+i, prefix+j);
+	return 1;
+}
+
+int prefix_weight(int prefix[],int* xCoord, int* yCoord, int citiesNum) {
+	int w = 0;
+	int i;
+	for(i = 0; i < PREF_SIZE - 1;++i)
+		w += get_dist(prefix[i],prefix[i+1], xCoord, yCoord, citiesNum);
+	return w;
+}
+
+void create_job(int prefix[], char is_done) {
+	memcpy(job->prefix, prefix, PREF_SIZE * sizeof(int));
+	job->is_done = is_done;
+}
+
+int ABS(int a) {
+  return a>0 ? a : a*(-1);
+}
+
+//gets 2 cities and coordinates and citiesNum
+//returns the manhatten distance
+int get_dist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
+  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
+}
+
+
+/*
+@param current - the current index we are working on - last one will be the stop
+@param path - current path
+@param curr_weight - curr path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+	if(current == citiesNum - 1) {
+		memcpy(bestPath, path, citiesNum * sizeof(int));
+		return curr_weight + get_dist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
+	}
+	int min_weight = MAX_PATH;
+	int receivedPath[citiesNum];
+	for(int i = 0; i < citiesNum; ++i) {
+		if(used[i] == 1)
+			continue;
+		int check_now = curr_weight + get_dist(path[current],i,xCoord,yCoord,citiesNum);
+		path[current + 1] = i;
+		used[i] = 1;
+		int weight = find_rec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
+		used[i] = 0;
+		if(weight < min_weight) {
+			min_weight = weight;
+			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
+		}
+	}
+	return min_weight;
+}
+
+
+
+/*
+@param prefix - gets prefix of a path
+@param len - the prefix length
+@param initialWeight - prefix path weight
+@param bestPath - will hold at each recursive call the best path
+@param xCoord,yCoord,citiesNum - as always
+@return - will return the best path's weight
+*/
+int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
+	int used[citiesNum];
+  int path[citiesNum];
+	memset(used, 0, citiesNum * sizeof(int));
+	memcpy(path, prefix, len * sizeof(int));
+	for(int i = 0; i < len; ++i)
+		used[prefix[i]] = 1;
+	return find_rec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
+}
+
+
+// returns all path prefixes the process have to solve, according to it's rank and number of processes
+void fill_prefs(int procs_num,int citiesNum, int r, int size, int firstIndex, int** prefs) {
+	int i,j;
+	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
+		prefs[j] = malloc(PREF_SIZE * sizeof(int));
+		prefs[j][0] = 0;	// all prefixes start at city 0
+		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
+		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
+		if(prefs[j][1] <= prefs[j][2])
+			++prefs[j][2];
+	}
+}
+
 int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -186,149 +285,4 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 	free(job);
 
 	return min_weight;
-}
-
-void swap(int* x, int* y) {
-	int tmp = *x;
-	*x = *y;
-	*y = tmp;
-}
-
-//keep first node always 0
-int next_permut(int* prefix) {
-	int i, j;
-	for(i = PREF_SIZE-2; i >= 1; --i)
-		if(prefix[i] < prefix[i+1])
-			break;
-	if(i < 1) // last permutation
-		return 0;
-	for(j = PREF_SIZE-1; j > i; --j)
-		if(prefix[j] > prefix[i])
-			break;
-	swap(prefix+i, prefix+j);
-	++i;
-	for(j = PREF_SIZE-1; j > i; --j, ++i)
-		swap(prefix+i, prefix+j);
-	return 1;
-}
-
-int prefix_weight(int prefix[],int* xCoord, int* yCoord, int citiesNum) {
-	int w = 0;
-	int i;
-	for(i = 0; i < PREF_SIZE - 1;++i)
-		w += get_dist(prefix[i],prefix[i+1], xCoord, yCoord, citiesNum);
-	return w;
-}
-
-
-int get_max(int arr[], int* ind, int size) {
-	int i;
-	*ind = 0;
-	for(i = 0; i < size; ++i)
-		if(arr[i] > arr[*ind])
-			*ind = i;
-	return arr[*ind];
-}
-
-void sort(int arr[], int size) {
-	int i, j;
-	int min = 0;
-	for(i  = 0; i < size; ++i) {
-		for(j = i + 1; j < size; ++j)
-			if(arr[j] < arr[min])
-				min = j;
-		int tmp = arr[i];
-		arr[i] = arr[min];
-		arr[min] = tmp;
-	}
-}
-
-void workerInitialize() {
-
-}
-
-void create_job(int prefix[], char is_done) {
-	memcpy(job->prefix, prefix, PREF_SIZE * sizeof(int));
-	job->is_done = is_done;
-}
-
-
-
-//===================================================================
-//===================================================================
-
-int ABS(int a) {
-  return a>0 ? a : a*(-1);
-}
-
-//gets 2 cities and coordinates and citiesNum
-//returns the manhatten distance
-int get_dist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
-  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
-}
-
-
-/*
-@param current - the current index we are working on - last one will be the stop
-@param path - current path
-@param curr_weight - curr path weight
-@param bestPath - will hold at each recursive call the best path
-@param xCoord,yCoord,citiesNum - as always
-@return - will return the best path's weight
-*/
-int find_rec(int current, int curr_weight, int* path, int* used, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	if(current == citiesNum - 1) {
-		memcpy(bestPath, path, citiesNum * sizeof(int));
-		return curr_weight + get_dist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
-	}
-	int min_weight = MAX_PATH;
-	int receivedPath[citiesNum];
-	for(int i = 0; i < citiesNum; ++i) {
-		if(used[i] == 1)
-			continue;
-		int check_now = curr_weight + get_dist(path[current],i,xCoord,yCoord,citiesNum);
-		path[current + 1] = i;
-		used[i] = 1;
-		int weight = find_rec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
-		used[i] = 0;
-		if(weight < min_weight) {
-			min_weight = weight;
-			memcpy(bestPath, receivedPath, citiesNum * sizeof(int));
-		}
-	}
-	return min_weight;
-}
-
-
-
-/*
-@param prefix - gets prefix of a path
-@param len - the prefix length
-@param initialWeight - prefix path weight
-@param bestPath - will hold at each recursive call the best path
-@param xCoord,yCoord,citiesNum - as always
-@return - will return the best path's weight
-*/
-int find(int* prefix, int len, int initialWeight, int* bestPath,int* xCoord,int* yCoord,int citiesNum) {
-	int used[citiesNum];
-  int path[citiesNum];
-	memset(used, 0, citiesNum * sizeof(int));
-	memcpy(path, prefix, len * sizeof(int));
-	for(int i = 0; i < len; ++i)
-		used[prefix[i]] = 1;
-	return find_rec(len - 1, initialWeight, path, used, bestPath,xCoord, yCoord,citiesNum);
-}
-
-
-// returns all path prefixes the process have to solve, according to it's rank and number of processes
-void fill_prefs(int procs_num,int citiesNum, int r, int size, int firstIndex, int** prefs) {
-	int i,j;
-	for(i = firstIndex, j = 0; i < firstIndex + size; ++i, ++j) {
-		prefs[j] = malloc(PREF_SIZE * sizeof(int));
-		prefs[j][0] = 0;	// all prefixes start at city 0
-		prefs[j][1] = 1 + i / (citiesNum - 2);	// according to the number of branch in the tree of prefixes
-		prefs[j][2] = 1 + i % (citiesNum - 3);	// according to the number of branch in the tree of prefixes
-		if(prefs[j][1] <= prefs[j][2])
-			++prefs[j][2];
-	}
 }
