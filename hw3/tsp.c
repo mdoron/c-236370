@@ -16,7 +16,7 @@ typedef struct job_t {
 	char is_done;
 } Job;
 
-int* global_x, global_y;
+int *global_x, *global_y;
 int global_cities_num, procs_num, my_rank, prev_bound, local_bound;
 Job* job;
 
@@ -77,6 +77,12 @@ int next_permut(int* prefix) {
 	return 1;
 }
 
+//gets 2 cities and coordinates and citiesNum
+//returns the manhatten distance
+int get_dist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
+  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
+}
+
 int prefix_weight(int prefix[],int* xCoord, int* yCoord, int citiesNum) {
 	int w = 0;
 	int i;
@@ -92,12 +98,6 @@ void create_job(int prefix[], char is_done) {
 
 int ABS(int a) {
   return a>0 ? a : a*(-1);
-}
-
-//gets 2 cities and coordinates and citiesNum
-//returns the manhatten distance
-int get_dist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
-  return city1==city2? 0 : (ABS(xCoord[city1]-xCoord[city2])+ABS(yCoord[city1]-yCoord[city2]));
 }
 
 
