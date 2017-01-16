@@ -36,7 +36,7 @@ int getDist(int city1,int city2,int *xCoord,int* yCoord,int citiesNum) {
 */
 int findRec(int current, int curWeight, int* path, int* inside, int* resPath,int* xCoord,int* yCoord,int citiesNum) {
 	int res[citiesNum];
-	int minWeight = MAX_PATH;
+	int min_w = MAX_PATH;
 	if(citiesNum - 1 <= current) {
 		memcpy(resPath, path, citiesNum * sizeof(int));
 		return curWeight + getDist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
@@ -49,12 +49,12 @@ int findRec(int current, int curWeight, int* path, int* inside, int* resPath,int
 		inside[i] = 1;
 		int wNow = findRec(current + 1, check_now, path, inside, res,xCoord,yCoord,citiesNum);
 		inside[i] = 0;
-		if(wNow < minWeight) {
-			minWeight = wNow;
+		if(wNow < min_w) {
+			min_w = wNow;
 			memcpy(resPath, res, citiesNum * sizeof(int));
 		}
 	}
-	return minWeight;
+	return min_w;
 }
 
 
@@ -78,7 +78,7 @@ int find(int* prefix, int len, int initialWeight, int* resPath,int* xCoord,int* 
 }
 
 
-void fillPrefs(int procsNum,int citiesNum, int r, int size, int firstIndex, int** prefs) {
+void fillPrefs(int procs_num,int citiesNum, int r, int size, int firstIndex, int** prefs) {
 	int prefCol = 0;
 	for(int i = firstIndex; i < firstIndex + size; i++) {
 		prefs[prefCol] = malloc(PREF_SIZE * sizeof(int));
@@ -98,13 +98,13 @@ gets the cities num and coordinates
 returns the shortestPath
 */
 int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
-  int rank, procsNum;
+  int rank, procs_num;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &procsNum);
+	MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
 	MPI_Status status;
 
   if (rank==0){
-		for(int i=1;i<procsNum;i++){
+		for(int i=1;i<procs_num;i++){
 			MPI_Bsend(&citiesNum,1,MPI_INT,i,0,MPI_COMM_WORLD);
 			MPI_Bsend(xCoord,citiesNum,MPI_INT,i,1,MPI_COMM_WORLD);
 			MPI_Bsend(yCoord,citiesNum,MPI_INT,i,2,MPI_COMM_WORLD);
@@ -120,54 +120,52 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
   if(citiesNum < SERIAL_VAR) {
     if(rank > 0)
       return MAX_PATH;
-    int prefix[citiesNum];
+    int prefix[citiesNum], bestPath[citiesNum];
     prefix[0] = 0;
-    int bestPath[citiesNum];
-    int minWeight = find(prefix, 1, 0, bestPath,xCoord,yCoord,citiesNum);
+    int min_w = find(prefix, 1, 0, bestPath,xCoord,yCoord,citiesNum);
     memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
-    return minWeight;
+    return min_w;
   }
 
 	int prefNum = (citiesNum - 1) * (citiesNum - 2);
-	int count = prefNum / procsNum;
-	int firstIndex = rank * count + (rank < prefNum % procsNum ? rank : prefNum % procsNum);
-	int size = rank < prefNum % procsNum ? count + 1 : count;
+	int count = prefNum / procs_num;
+	int firstIndex = rank * count + (rank < prefNum % procs_num ? rank : prefNum % procs_num);
+	int size = rank < prefNum % procs_num ? count + 1 : count;
 	int** prefs = malloc(size * sizeof(*prefs));
 
-	fillPrefs(procsNum,citiesNum, rank, size, firstIndex, prefs);
-	int minWeight = MAX_PATH;
+	fillPrefs(procs_num,citiesNum, rank, size, firstIndex, prefs);
+	int min_w = MAX_PATH;
 	int bestPath[citiesNum];
 	int path[citiesNum];
 	for(int i = 0; i < size; ++i) {
 		int dist = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
 		int weight = find(prefs[i], PREF_SIZE, dist, path,xCoord,yCoord,citiesNum);
 		free(prefs[i]);
-		if(weight < minWeight) {
-			minWeight = weight;
+		if(weight < min_w) {
+			min_w = weight;
 			memcpy(bestPath, path, sizeof(*path)*citiesNum);
 		}
 	}
 	free(prefs);
-	int* weights;
-	int* paths;
+	int* w, *paths;
 	if(rank == 0) {
-		weights = malloc(sizeof(int) * procsNum);
-		paths = malloc(sizeof(int) * (procsNum * citiesNum));
+		w = malloc(sizeof(int) * procs_num);
+		paths = malloc(sizeof(int) * (procs_num * citiesNum));
 	}
-	MPI_Gather(&minWeight, 1, MPI_INT, weights, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather(&min_w, 1, MPI_INT, w, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, 0, MPI_COMM_WORLD);
 	if(rank == 0) {
-		int best = 0;
-		for(int i = 0; i < procsNum; ++i)
-			if(weights[i] < minWeight) {
-				minWeight = weights[i];
-				best = i;
+		int min_idx = 0;
+		for(int i = 0; i < procs_num; ++i)
+			if(w[i] < min_w) {
+				min_w = w[i];
+				min_idx = i;
 			}
-		memcpy(shortestPath, paths + best*citiesNum, citiesNum * sizeof(int));
-		free(weights);
+		memcpy(shortestPath, paths + min_idx*citiesNum, citiesNum * sizeof(int));
+		free(w);
 		free(paths);
 	}
 
-	return minWeight;
+	return min_w;
 
 }
