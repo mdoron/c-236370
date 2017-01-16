@@ -108,21 +108,15 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 
 	MPI_Request request;
 	
-	printf("@@@");
-	fflush(stdout);
-	
 	if(myRank == 0) {
 		int prefix[PREFIX_LENGTH];
 		int i;
 		for(i = 0; i < PREFIX_LENGTH; i++) { 
 			prefix[i] = i;
 		}
-		printf("!!!");
 		do {
 			createTask(prefix, FALSE);
 			LISTEN {
-				printf("###");
-				fflush(stdout);
 				MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
 				if(status.MPI_TAG == ASK_FOR_JOB) {
@@ -132,8 +126,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					break;
 				}
 				else if(status.MPI_TAG == REPORT) {
-					printf("^^^");
-					fflush(stdout);
 					MPI_Recv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &status);
 					MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
 					MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
@@ -145,10 +137,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 					}
 				}
 			}
-			printf("()()()");
 		} while(nextPermut(prefix));
-		printf("===");
-		fflush(stdout);
 		createTask(prefix, TRUE);
 		for(i = 1; i < numProcs; ++i)
 			MPI_Issend(task, 1, MPI_Task, i, NEW_JOB, MPI_COMM_WORLD, &request);
@@ -197,14 +186,9 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[])
 				MPI_Issend(&info,1,MPI_CHAR,0,NOTHING_TO_REPORT,MPI_COMM_WORLD, &request);
 				break;
 			}
-			printf("111");
-			fflush(stdout);
 			int* a = task->prefix;
 			int b = prefixWeight(task->prefix, xCoord, yCoord, citiesNum);
-			printf("222");
 			weight = find(a, PREFIX_LENGTH, b, path,xCoord,yCoord,citiesNum);
-			printf("333");
-			fflush(stdout);
 			if(weight < localBound) {
 				info = REPORT;
 				MPI_Ssend(&info,1,MPI_CHAR,0,REPORT,MPI_COMM_WORLD);
