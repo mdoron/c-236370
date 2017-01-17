@@ -218,7 +218,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 							int source = status.MPI_SOURCE;
 							if(status.MPI_TAG == ASK_FOR_JOB) {
 								// check if need irecv
-								MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
+								MPI_Irecv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
 								MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD,&request);
 								break;
 							}
@@ -247,7 +247,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 			MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			int source = status.MPI_SOURCE;
 			if(status.MPI_TAG == ASK_FOR_JOB) {
-				MPI_Recv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
+				MPI_Irecv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &status);
 				MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD, &request);
 				continue;
 			}
@@ -261,7 +261,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				}
 			}
 			else if(status.MPI_TAG == NOTHING_TO_REPORT) {
-				MPI_Recv(&info,1,MPI_CHAR,source,NOTHING_TO_REPORT, MPI_COMM_WORLD, &status);
+				MPI_Irecv(&info,1,MPI_CHAR,source,NOTHING_TO_REPORT, MPI_COMM_WORLD, &status);
 				++count;
 			}
 		}
