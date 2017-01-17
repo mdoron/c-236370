@@ -120,10 +120,10 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
   if(citiesNum < SERIAL_VAR) {
     if(rank > 0)
       return MAX_PATH;
-    int prefix[citiesNum], bestPath[citiesNum];
+    int prefix[citiesNum], min_path[citiesNum];
     prefix[0] = 0;
-    int min_w = find(prefix, 1, 0, bestPath,xCoord,yCoord,citiesNum);
-    memcpy(shortestPath, bestPath, citiesNum * sizeof(int));
+    int min_w = find(prefix, 1, 0, min_path,xCoord,yCoord,citiesNum);
+    memcpy(shortestPath, min_path, citiesNum * sizeof(int));
     return min_w;
   }
 
@@ -135,7 +135,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 
 	fillPrefs(procs_num,citiesNum, rank, size, firstIndex, prefs);
 	int min_w = MAX_PATH;
-	int bestPath[citiesNum];
+	int min_path[citiesNum];
 	int path[citiesNum];
 	for(int i = 0; i < size; ++i) {
 		int dist = getDist(prefs[i][0],prefs[i][1],xCoord,yCoord,citiesNum) + getDist(prefs[i][1],prefs[i][2],xCoord,yCoord,citiesNum);
@@ -143,7 +143,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		free(prefs[i]);
 		if(weight < min_w) {
 			min_w = weight;
-			memcpy(bestPath, path, sizeof(*path)*citiesNum);
+			memcpy(min_path, path, sizeof(*path)*citiesNum);
 		}
 	}
 	free(prefs);
@@ -153,7 +153,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortestPath[]) {
 		paths = malloc(sizeof(int) * (procs_num * citiesNum));
 	}
 	MPI_Gather(&min_w, 1, MPI_INT, w, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Gather(bestPath, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather(min_path, citiesNum, MPI_INT, paths, citiesNum, MPI_INT, 0, MPI_COMM_WORLD);
 	if(rank == 0) {
 		int min_idx = 0;
 		for(int i = 0; i < procs_num; ++i)
