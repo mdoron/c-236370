@@ -69,8 +69,7 @@ int next_permut(int* prefix) {
 	for(i = PREF_SIZE-2; i >= 1; --i)
 		if(prefix[i] < prefix[i+1])
 			break;
-	if(i < 1) {// last permutation
-		printf("Last: %d %d %d\n", prefix[0], prefix[1], prefix[2]);
+	if(i < 1) { 
 		return 0;
 	}
 	for(j = PREF_SIZE-1; j > i; --j)
@@ -80,8 +79,6 @@ int next_permut(int* prefix) {
 	++i;
 	for(j = PREF_SIZE-1; j > i; --j, ++i)
 		swap(prefix+i, prefix+j);
-
-	printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
 	return 1;
 }
 
@@ -198,17 +195,20 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 	
 	if(my_rank == 0) {
 		int prefix[PREF_SIZE];
+		prefix[0] = 0;
 		int i=0, j=0, k=0;
-		for(i = 0; i < citiesNum; i++) { 
+		for(i = 1; i < citiesNum; i++) { 
 			for (int j = i; j < citiesNum; j++) {
 				if (i == j) 
 					continue;
 				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k)
 						continue;
-					prefix[0] = i;
-					prefix[1] = j;
-					prefix[2] = k;
+					prefix[1] = i;
+					prefix[2] = j;
+					prefix[3] = k;
+
+					printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
 					do {
 						create_job(prefix, FALSE);
 						LISTEN {
