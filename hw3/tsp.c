@@ -203,12 +203,12 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				if (i == j) {
 					continue;
 				}
-				printf("##### %d\n", j);
+				printf("##### %d %d\n", i, j);
 				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k) {
 						continue;
 					}
-					printf("########## %d\n", k);
+					printf("########## %d %d %d\n", i, j, k);
 					prefix[1] = i;
 					prefix[2] = j;
 					prefix[3] = k;
