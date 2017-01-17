@@ -66,13 +66,13 @@ void swap(int* x, int* y) {
 //keep first node always 0
 int next_permut(int* prefix) {
 	int i, j;
-	for(i = PREF_SIZE-1; i >= 1; --i)
+	for(i = PREF_SIZE-2; i >= 1; --i)
 		if(prefix[i] < prefix[i+1])
 			break;
 	if(i < 1) { // Last
 		return 0;
 	}
-	for(j = PREF_SIZE; j > i; --j)
+	for(j = PREF_SIZE-1; j > i; --j)
 		if(prefix[j] > prefix[i])
 			break;
 	swap(prefix+i, prefix+j);
