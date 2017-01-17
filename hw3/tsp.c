@@ -72,7 +72,7 @@ int next_permut(int* prefix) {
 	if(i < 1) { // Last
 		return 0;
 	}
-	for(j = PREF_SIZE; j > i; --j)
+	for(j = PREF_SIZE-1; j > i; --j)
 		if(prefix[j] > prefix[i])
 			break;
 	swap(prefix+i, prefix+j);
