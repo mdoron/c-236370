@@ -6,7 +6,7 @@
 
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
-#define PREF_SIZE 4
+#define PREF_SIZE 3
 #define TRUE 1
 #define FALSE 0
 #define LISTEN while(TRUE)
@@ -77,7 +77,7 @@ int next_permut(int* prefix) {
 			break;
 	swap(prefix+i, prefix+j);
 	++i;
-	for(j = PREF_SIZE-1; j > i; --j, ++i)
+	for(j = PREF_SIZE; j > i; --j, ++i)
 		swap(prefix+i, prefix+j);
 	return 1;
 }
@@ -211,7 +211,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 					prefix[3] = k;
 
 					do {
-						printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
+						// printf("%d %d %d %d\n", prefix[0], prefix[1], prefix[2], prefix[3]);
 						create_job(prefix, FALSE);
 						LISTEN {
 							MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
