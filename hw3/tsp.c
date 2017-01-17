@@ -235,7 +235,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 							}
 						} 
 					} while(next_permut(prefix));
-				}
+				// }
 			}
 		}
 		// 
