@@ -101,6 +101,9 @@ void create_job(int prefix[], char is_done) {
 	job->is_done = is_done;
 }
 
+int flg;
+MPI_Status stat;
+
 /*
 @param current - the current index we are working on - last one will be the stop
 @param path - current path
@@ -114,6 +117,16 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* min_path,i
 		memcpy(min_path, path, citiesNum * sizeof(int));
 		return curr_weight + get_dist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
+	if(current % 3 == 0) {
+		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flg, &stat);
+		if(flg && stat.MPI_TAG == NEW_BOUND) {
+			int prevBOund = local_bound;
+			MPI_Recv(&local_bound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &status);
+			if(prevBOund < local_bound)
+				local_bound = prev_bound;
+		}
+	}
+
 	int min_weight = MAX_PATH;
 	int receivedPath[citiesNum];
 	for(int i = 0; i < citiesNum; ++i) {
