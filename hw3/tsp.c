@@ -77,7 +77,7 @@ int next_permut(int* prefix) {
 			break;
 	swap(prefix+i, prefix+j);
 	++i;
-	for(j = PREF_SIZE; j > i; --j, ++i)
+	for(j = PREF_SIZE-1; j > i; --j, ++i)
 		swap(prefix+i, prefix+j);
 	return 1;
 }
