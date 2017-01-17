@@ -102,7 +102,7 @@ void create_job(int prefix[], char is_done) {
 }
 
 int flg;
-MPI_Status stat;
+MPI_Status stat, status;
 
 /*
 @param current - the current index we are working on - last one will be the stop
