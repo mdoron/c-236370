@@ -198,15 +198,15 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 		prefix[0] = 0;
 		int i=0, j=0, k=0;
 		for(i = 1; i < citiesNum; i++) { 
-			printf("# %d", i);
+			printf("# %d\n", i);
 			for (int j = i; j < citiesNum; j++) {
 				if (i == j) 
 					continue;
-				printf("##### %d", j);
+				printf("##### %d\n", j);
 				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k)
 						continue;
-					printf("########## %d", k);
+					printf("########## %d\n", k);
 					prefix[1] = i;
 					prefix[2] = j;
 					prefix[3] = k;
