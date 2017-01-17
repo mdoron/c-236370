@@ -198,24 +198,20 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 		prefix[0] = 0;
 		int i=0, j=0, k=0;
 		for(i = 1; i < citiesNum; i++) { 
-			printf("# %d\n", i);
 			for (int j = i; j < citiesNum; j++) {
 				if (i == j) {
 					continue;
 				}
-				printf("##### %d %d\n", i, j);
 				for (int k = j; k < citiesNum; k++) {
 					if (j == k || i == k) {
 						continue;
 					}
-					printf("########## %d %d %d\n", i, j, k);
 					prefix[1] = i;
 					prefix[2] = j;
 					prefix[3] = k;
 
-					printf("%d %d %d %d\n", prefix[0], prefix[1], prefix[2], prefix[3]);
-					printf("%d %d %d %d\n", 0, i, j, k);
 					do {
+						printf("%d %d %d %d\n", prefix[0], prefix[1], prefix[2], prefix[3]);
 						create_job(prefix, FALSE);
 						LISTEN {
 							MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
