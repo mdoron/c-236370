@@ -212,7 +212,6 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 	if(my_rank == 0) {
 		int prefix[PREF_SIZE];
 		prefix[0] = 0;
-		int i=0, j=0, k=0;
 		for(i = 1; i < citiesNum; i++) { 
 			for (int j = i; j < citiesNum; j++) {
 				if (i == j) {
