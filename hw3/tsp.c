@@ -117,7 +117,7 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* min_path,i
 		memcpy(min_path, path, citiesNum * sizeof(int));
 		return curr_weight + get_dist(path[0],path[citiesNum - 1],xCoord,yCoord,citiesNum);
 	}
-	if(current > citiesNum - 7) {
+	if(current == 11) {
 		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flg, &stat);
 		if(flg && stat.MPI_TAG == NEW_BOUND) {
 			int prevBOund = local_bound;
