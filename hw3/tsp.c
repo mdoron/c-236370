@@ -133,6 +133,9 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* min_path,i
 		if(used[i] == 1)
 			continue;
 		int check_now = curr_weight + get_dist(path[current],i,xCoord,yCoord,citiesNum);
+		if (check_now >= local_bound) {
+			continue;
+		}
 		path[current + 1] = i;
 		used[i] = 1;
 		int weight = find_rec(current + 1, check_now, path, used, receivedPath,xCoord,yCoord,citiesNum);
@@ -265,7 +268,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 				continue;
 			}
 			else if(status.MPI_TAG == REPORT) {
-				MPI_Irecv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &MPI_Request);
+				MPI_Irecv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &request);
 				MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
 				MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
 				if(weight < min_weight) {
