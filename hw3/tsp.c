@@ -212,6 +212,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 					prefix[3] = k;
 
 					printf("%d %d %d %d\n", prefix[0], prefix[1], prefix[2], prefix[3]);
+					printf("%d %d %d %d\n", 0, i, j, k);
 					do {
 						create_job(prefix, FALSE);
 						LISTEN {
