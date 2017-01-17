@@ -233,13 +233,11 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 							int source = status.MPI_SOURCE;
 							if(status.MPI_TAG == ASK_FOR_JOB) {
 								// check if need irecv
-								printf("1");							
 								MPI_Irecv(&info,1,MPI_CHAR,source,ASK_FOR_JOB, MPI_COMM_WORLD, &request);
 								MPI_Issend(job, 1, MPI_Job, source, NEW_JOB, MPI_COMM_WORLD,&request);
 								break;
 							}
 							else if(status.MPI_TAG == REPORT) {
-								printf("2");								
 								MPI_Irecv(&info,1,MPI_CHAR,source,REPORT, MPI_COMM_WORLD, &request);
 								MPI_Recv(&weight,1,MPI_INT,source,REPORT_WEIGHT, MPI_COMM_WORLD, &status);
 								MPI_Recv(path,citiesNum,MPI_INT,source,REPORT_PATH, MPI_COMM_WORLD, &status);
