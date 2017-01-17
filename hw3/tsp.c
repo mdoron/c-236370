@@ -233,8 +233,8 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 								if(weight < min_weight) {
 									min_weight = weight;
 									memcpy(min_path, path, citiesNum * sizeof(int));
-									for(i = 1; i < procs_num; ++i)
-										MPI_Issend(&min_weight, 1, MPI_INT, i, NEW_BOUND, MPI_COMM_WORLD, &request);
+									for(s = 1; s < procs_num; ++s)
+										MPI_Issend(&min_weight, 1, MPI_INT, s, NEW_BOUND, MPI_COMM_WORLD, &request);
 								}
 							}
 						} 
