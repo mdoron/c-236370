@@ -6,7 +6,7 @@
 
 #define MAX_PATH 10000000
 #define SERIAL_VAR 7
-#define PREF_SIZE 3
+#define PREF_SIZE 4
 #define TRUE 1
 #define FALSE 0
 #define LISTEN while(TRUE)
