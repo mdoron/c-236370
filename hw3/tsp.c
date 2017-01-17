@@ -102,7 +102,7 @@ void create_job(int prefix[], char is_done) {
 }
 
 int flg;
-MPI_Status stat, status;
+MPI_Status stat;
 
 /*
 @param current - the current index we are working on - last one will be the stop
@@ -121,7 +121,7 @@ int find_rec(int current, int curr_weight, int* path, int* used, int* min_path,i
 		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flg, &stat);
 		if(flg && stat.MPI_TAG == NEW_BOUND) {
 			int prevBOund = local_bound;
-			MPI_Recv(&local_bound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &status);
+			MPI_Recv(&local_bound,1,MPI_INT,0,NEW_BOUND, MPI_COMM_WORLD, &stat);
 			if(prevBOund < local_bound)
 				local_bound = prev_bound;
 		}
