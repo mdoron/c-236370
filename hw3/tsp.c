@@ -211,7 +211,7 @@ int tsp_main(int citiesNum, int xCoord[], int yCoord[], int shortest_path[])
 					// prefix[3] = k;
 
 					do {
-						printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
+						//printf("%d %d %d\n", prefix[0], prefix[1], prefix[2]);
 						create_job(prefix, FALSE);
 						LISTEN {
 							MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
