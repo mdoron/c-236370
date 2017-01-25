@@ -10,9 +10,10 @@
 //import java.util.NoSuchElementException;
 //import java.util.concurrent.ConcurrentLinkedQueue;
 //
-///**
-// * Created by raviv on 21/11/2016.
-// */
+///** // * Created by raviv on 21/11/2016.
+ * @author  Raviv Rachmiel <raviv.rachmiel@gmail.com>
+ * @since Nov 22, 2016
+ */
 //public class LifeConsumerTest {
 //
 //    @Test
