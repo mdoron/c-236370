@@ -54,6 +54,33 @@ public class Detector {
 		}
 	}
 
+	/*
+
+	*/
+	public static class FileToResMapper	extends Mapper<LongWritable, Text, Text, IntWritable> {
+		private final static IntWritable one = new IntWritable(1);
+		private final Text word = new Text();
+
+		public void map(LongWritable key, Text value, Context context)
+				throws IOException, InterruptedException {
+			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
+			while (st.hasMoreTokens()) {
+				word.set(st.nextToken().split(" ")[0]); // the file name
+				context.write(word, one + " " + st.nextToken().split(" ")[1]);
+			}
+		}
+	}
+
+	public static class CuttingReducer extends Reducer<Text,IntWritable,Text,IntWritable> {
+		private final IntWritable result = new IntWritable();
+
+		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+				throws IOException, InterruptedException {
+			context.write(key, val);
+		}
+	}
+	//END
+
 	public static class SwapMapper extends Mapper<Text, Text, IntWritable, Text> {
 		private final IntWritable count = new IntWritable();
 
@@ -61,7 +88,7 @@ public class Detector {
 				throws IOException, InterruptedException {
 			String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
 			System.out.println(fileName);
-			
+
 			count.set(Integer.parseInt(value.toString()));
 			context.write(count, key);
 		}
@@ -99,19 +126,18 @@ public class Detector {
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(args[0]));
-		//FileOutputFormat.setOutputPath(job1, TEMP_PATH);
-		FileOutputFormat.setOutputPath(job1, new Path(args[1]));
+		FileOutputFormat.setOutputPath(job1, TEMP_PATH);
+		//FileOutputFormat.setOutputPath(job1, new Path(args[1]));
 
 		boolean status1 = job1.waitForCompletion(true);
 		if(!status1) {
 			System.exit(1);
 		}
-/*
 		// Setup second MapReduce phase
 		Job job2 = Job.getInstance(conf, "Detector-second");
 		job2.setJarByClass(Detector.class);
-		job2.setMapperClass(SwapMapper.class);
-		job2.setReducerClass(OutputReducer.class);
+		job2.setMapperClass(FileToResMapper.class);
+		job2.setReducerClass(CuttingReducer.class);
 		job2.setMapOutputKeyClass(IntWritable.class);
 		job2.setMapOutputValueClass(Text.class);
 		job2.setOutputKeyClass(Text.class);
@@ -122,12 +148,10 @@ public class Detector {
 
 		boolean status2 = job2.waitForCompletion(true);
 
-
+		fs.delete(TEMP_PATH, true);
 
 		if (!status2) System.exit(1);
 	}
-	*/
 	// Clean temporary files from the first MapReduce phase
-		fs.delete(TEMP_PATH, true);
-	}
+
 }
