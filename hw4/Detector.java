@@ -15,6 +15,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.fs.FileSystem;
 
+
+/** the class of the Detector
+ * @author  Raviv Rachmiel <raviv.rachmiel@gmail.com>
+ * @since Jan 26, 2017
+ */
 public class Detector {
 	// User local temp folder
 	private static final Path TEMP_PATH = new Path("temp");
@@ -25,10 +30,11 @@ public class Detector {
 
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
-			StringTokenizer st = new StringTokenizer(value.toString());
+			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
 			while (st.hasMoreTokens()) {
 				word.set(st.nextToken());
-				context.write(word, one);
+				String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+				context.write(fileName + " " + word, one);
 			}
 		}
 	}
