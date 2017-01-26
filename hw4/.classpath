@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/common/hadoop-common-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/common/hadoop-common-2.7.1-tests.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/common/hadoop-nfs-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-app-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-common-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-core-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-hs-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-hs-plugins-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.7.1-tests.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-client-shuffle-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/Users/doron/Documents/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
