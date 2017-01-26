@@ -11,6 +11,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.fs.FileSystem;
@@ -52,6 +53,9 @@ public class Detector {
 
 		public void map(Text key, Text value, Context context)
 				throws IOException, InterruptedException {
+			String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+			System.out.println(fileName);
+			
 			count.set(Integer.parseInt(value.toString()));
 			context.write(count, key);
 		}
