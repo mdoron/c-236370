@@ -2,6 +2,10 @@ package main;
 
 import java.util.ArrayList;
 
+/** TODO:  Doron Mehsulam <doronmmm@hotmail.com> please add a description
+ * @author  Doron Mehsulam <doronmmm@hotmail.com>
+ * @since Nov 18, 2016
+ */
 public class ParallelGameOfLife implements GameOfLife {
 
 	ArrayList<OurConcurrentQueue<Work>> queuesArray;

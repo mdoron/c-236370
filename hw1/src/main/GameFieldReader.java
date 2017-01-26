@@ -3,6 +3,10 @@ package main;
 import java.io.*;
 import java.util.*;
 
+/** TODO:  Doron Mehsulam <doronmmm@hotmail.com> please add a description
+ * @author  Doron Mehsulam <doronmmm@hotmail.com>
+ * @since Nov 18, 2016
+ */
 public class GameFieldReader{
 	
 	String filename;

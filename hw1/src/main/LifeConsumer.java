@@ -3,8 +3,9 @@ package main;
 import java.util.ArrayList;
 import java.util.Objects;
 
-/**
- * Created by raviv on 16/11/2016.
+/**  * Created by raviv on 16/11/2016.
+ * @author  Doron Mehsulam <doronmmm@hotmail.com>
+ * @since Nov 18, 2016
  */
 /*
  * LifeConsumer algorithm is placed in the outer documentary
