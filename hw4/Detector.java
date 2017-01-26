@@ -15,7 +15,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.fs.FileSystem;
 
-public class WordOrder {
+public class Detector {
 	// User local temp folder
 	private static final Path TEMP_PATH = new Path("temp");
 
@@ -79,8 +79,9 @@ public class WordOrder {
 		from which the first phase writes to, and the second reads from */
 
 		// Setup first MapReduce phase
-		Job job1 = Job.getInstance(conf, "WordOrder-first");
-		job1.setJarByClass(WordOrder.class);
+		//this MapReduce will take all the files and make a map of word to counter
+		Job job1 = Job.getInstance(conf, "Detector-first");
+		job1.setJarByClass(Detector.class);
 		job1.setMapperClass(TokenizerMapper.class);
 		job1.setReducerClass(IntSumReducer.class);
 		job1.setMapOutputKeyClass(Text.class);
@@ -96,8 +97,8 @@ public class WordOrder {
 		}
 
 		// Setup second MapReduce phase
-		Job job2 = Job.getInstance(conf, "WordOrder-second");
-		job2.setJarByClass(WordOrder.class);
+		Job job2 = Job.getInstance(conf, "Detector-second");
+		job2.setJarByClass(Detector.class);
 		job2.setMapperClass(SwapMapper.class);
 		job2.setReducerClass(OutputReducer.class);
 		job2.setMapOutputKeyClass(IntWritable.class);

@@ -1,3 +1,4 @@
 er: cdp20
 password: ItbyulOv4
 server: ds-bl201.cs.technion.ac.il
+  sec server: bl200.cs.technion.ac.il
