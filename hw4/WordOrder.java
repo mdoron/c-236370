@@ -15,6 +15,10 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.fs.FileSystem;
 
+/** TODO:  Raviv Rachmiel <raviv.rachmiel@gmail.com> please add a description
+ * @author  Raviv Rachmiel <raviv.rachmiel@gmail.com>
+ * @since Jan 26, 2017
+ */
 public class WordOrder {
 	// User local temp folder
 	private static final Path TEMP_PATH = new Path("temp");
