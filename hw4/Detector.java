@@ -118,10 +118,11 @@ public class Detector {
 
 		boolean status2 = job2.waitForCompletion(true);
 
-		// Clean temporary files from the first MapReduce phase
-		fs.delete(TEMP_PATH, true);
+
 
 		if (!status2) System.exit(1);
 	}
 	*/
+	// Clean temporary files from the first MapReduce phase
+	fs.delete(TEMP_PATH, true);
 }
