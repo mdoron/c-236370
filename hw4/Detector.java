@@ -95,13 +95,14 @@ public class Detector {
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job1, TEMP_PATH);
+		//FileOutputFormat.setOutputPath(job1, TEMP_PATH);
+		FileOutputFormat.setOutputPath(job1, new Path(args[1]));
 
 		boolean status1 = job1.waitForCompletion(true);
 		if(!status1) {
 			System.exit(1);
 		}
-
+/*
 		// Setup second MapReduce phase
 		Job job2 = Job.getInstance(conf, "Detector-second");
 		job2.setJarByClass(Detector.class);
@@ -122,4 +123,5 @@ public class Detector {
 
 		if (!status2) System.exit(1);
 	}
+	*/
 }
