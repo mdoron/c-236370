@@ -16,6 +16,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.fs.FileSystem;
 
+
+/** the class of the Detector
+ * @author  Raviv Rachmiel <raviv.rachmiel@gmail.com>
+ * @since Jan 26, 2017
+ */
 public class Detector {
 	// User local temp folder
 	private static final Path TEMP_PATH = new Path("temp");
@@ -26,10 +31,11 @@ public class Detector {
 
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
-			StringTokenizer st = new StringTokenizer(value.toString());
+			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
 			while (st.hasMoreTokens()) {
 				word.set(st.nextToken());
-				context.write(word, one);
+				String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+				context.write(fileName + " " + word, one);
 			}
 		}
 	}
@@ -93,13 +99,14 @@ public class Detector {
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job1, TEMP_PATH);
+		//FileOutputFormat.setOutputPath(job1, TEMP_PATH);
+		FileOutputFormat.setOutputPath(job1, new Path(args[1]));
 
 		boolean status1 = job1.waitForCompletion(true);
 		if(!status1) {
 			System.exit(1);
 		}
-
+/*
 		// Setup second MapReduce phase
 		Job job2 = Job.getInstance(conf, "Detector-second");
 		job2.setJarByClass(Detector.class);
@@ -120,4 +127,5 @@ public class Detector {
 
 		if (!status2) System.exit(1);
 	}
+	*/
 }
