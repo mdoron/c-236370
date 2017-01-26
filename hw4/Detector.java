@@ -33,9 +33,9 @@ public class Detector {
 				throws IOException, InterruptedException {
 			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
 			while (st.hasMoreTokens()) {
-				word.set(st.nextToken());
 				String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
-				context.write(fileName + " " + word, one);
+				word.set(fileName +  " " + st.nextToken());
+				context.write(word, one);
 			}
 		}
 	}
@@ -128,4 +128,5 @@ public class Detector {
 		if (!status2) System.exit(1);
 	}
 	*/
+	}
 }
