@@ -57,7 +57,7 @@ public class Detector {
 	/*
 
 	*/
-	public static class FileToResMapper	extends Mapper<LongWritable, Text, Text, IntWritable> {
+	public static class FileToResMapper	extends Mapper<LongWritable, Text, Text, Text> {
 		private final static IntWritable one = new IntWritable(1);
 		private final Text word = new Text();
 
@@ -66,17 +66,18 @@ public class Detector {
 			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
 			while (st.hasMoreTokens()) {
 				word.set(st.nextToken().split(" ")[0]); // the file name
-				context.write(word, one + " " + st.nextToken().split(" ")[1]);
+				context.write(word, new Text(one + " " + st.nextToken().split(" ")[1]));
 			}
 		}
 	}
 
-	public static class CuttingReducer extends Reducer<Text,IntWritable,Text,IntWritable> {
+	public static class CuttingReducer extends Reducer<Text, IntWritable, Text, Text> {
 		private final IntWritable result = new IntWritable();
 
-		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+		public void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
-			context.write(key, val);
+			for(Text val : values) 
+				context.write(key, val);
 		}
 	}
 	//END
