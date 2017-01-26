@@ -57,16 +57,15 @@ public class Detector {
 	/*
 
 	*/
-	public static class FileToResMapper	extends Mapper<LongWritable, Text, Text, Text> {
-		private final static IntWritable one = new IntWritable(1);
+	public static class FileToResMapper	extends Mapper<Text, Text, Text, Text> {
 		private final Text word = new Text();
 
-		public void map(LongWritable key, Text value, Context context)
+		public void map(Text key, Text value, Context context)
 				throws IOException, InterruptedException {
 			StringTokenizer st = new StringTokenizer(value.toString().toLowerCase());
 			while (st.hasMoreTokens()) {
 				word.set(st.nextToken().split(" ")[0]); // the file name
-				context.write(word, new Text(one + " " + st.nextToken().split(" ")[1]));
+				context.write(word, new Text(st.nextToken().split(" ")[2] + " " + st.nextToken().split(" ")[1]));
 			}
 		}
 	}
