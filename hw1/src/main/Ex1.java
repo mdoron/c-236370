@@ -3,6 +3,10 @@ package main;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
+/** TODO:  Doron Mehsulam <doronmmm@hotmail.com> please add a description
+ * @author  Doron Mehsulam <doronmmm@hotmail.com>
+ * @since Nov 27, 2016
+ */
 public class Ex1 {
 	private static void printUsage(){
 		System.out.println("<Initial pattern filename> <#horizonal splits> "+

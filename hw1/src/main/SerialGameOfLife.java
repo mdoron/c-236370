@@ -1,5 +1,9 @@
 package main;
 
+/** TODO:  Doron Mehsulam <doronmmm@hotmail.com> please add a description
+ * @author  Doron Mehsulam <doronmmm@hotmail.com>
+ * @since Nov 18, 2016
+ */
 public class SerialGameOfLife implements GameOfLife {
 	public boolean[][][] invoke(boolean[][] initalField, int hSplit, int vSplit, int generations) {
 		boolean[][][] x = new boolean[2][][];
