@@ -1,0 +1,10 @@
+file0.txt	file5.txt	6
+file1.txt	file8.txt	9
+file2.txt	file3.txt	9
+file2.txt	file8.txt	8
+file4.txt	file0.txt	7
+file4.txt	file5.txt	11
+file4.txt	file7.txt	11
+file7.txt	file0.txt	8
+file7.txt	file2.txt	11
+file7.txt	file3.txt	10
